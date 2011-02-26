@@ -27,7 +27,6 @@ COLOR OPTIONS
 
 import sublime
 import sublime_plugin
-import re
 
 DEFAULT_COLOR_SCOPE_NAME = "comment"
 
@@ -39,6 +38,6 @@ class WordHighlightListener(sublime_plugin.EventListener):
     
     regions = []
     for sel in view.sel():
-      if len(sel):
-        regions += view.find_all(re.escape(view.substr(sel)))
+      if len(sel) > 2:
+        regions += view.find_all(view.substr(sel), sublime.LITERAL)
     view.add_regions("WordHighlight", regions, color_scope_name, draw_outlined)
