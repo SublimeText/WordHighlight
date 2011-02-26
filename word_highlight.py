@@ -44,5 +44,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
       #of itself.
       #As a workaround, we compare the lengths instead.
       if len(sel) == len(view.word(sel)):
-        regions += view.find_all(view.substr(sel).strip(), sublime.LITERAL)
+        string = view.substr(sel).strip()
+        if len(string):
+          regions += view.find_all(string, sublime.LITERAL)
     view.add_regions("WordHighlight", regions, color_scope_name, draw_outlined)
