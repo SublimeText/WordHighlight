@@ -35,6 +35,15 @@ import sublime_plugin
 
 DEFAULT_COLOR_SCOPE_NAME = "comment"
 
+def regex_escape(string):
+	outstring = ""
+	for c in string:
+		if c != '\\':
+			outstring += '['+c+']'
+		else:
+			outstring += '\\'
+	return outstring
+
 class WordHighlightListener(sublime_plugin.EventListener):
 	def on_selection_modified(self,view):
 		settings = view.settings()
@@ -52,9 +61,9 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			if len(sel) == len(view.word(sel)):
 				string = view.substr(sel).strip()
 				if len(string):
-					regions += view.find_all(string, sublime.LITERAL)
+					regions += view.find_all('\\b'+regex_escape(string)+'\\b')
 			elif len(sel) == 0 and bool(settings.get('word_highlights_when_selection_is_empty')):
 				string = view.substr(view.word(sel)).strip()
 				if len(string) and all([not c in word_separators for c in string]):
-					regions += view.find_all(string, sublime.LITERAL)
+					regions += view.find_all('\\b'+regex_escape(string)+'\\b')
 		view.add_regions("WordHighlight", regions, color_scope_name, draw_outlined)
