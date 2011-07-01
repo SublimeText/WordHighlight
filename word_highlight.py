@@ -53,12 +53,12 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		
 		regions = []
 		for sel in view.sel():
-			#If we directly compare sel and view.word(sel), then in compares their
+			#If we directly compare sel and view.word(sel), then it compares their
 			#a and b values rather than their begin() and end() values. This means
 			#that a leftward selection (with a > b) will never match the view.word()
 			#of itself.
 			#As a workaround, we compare the lengths instead.
-			if len(sel) == len(view.word(sel)):
+			if len(sel) < 200 and len(sel) == len(view.word(sel)):
 				string = view.substr(sel).strip()
 				if len(string):
 					regions += view.find_all('\\b'+regex_escape(string)+'\\b')
