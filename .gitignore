@@ -1,0 +1,5 @@
+*.pyc
+*.cache
+*.sublime-project
+*.hgignore
+*.hgtags
