@@ -14,8 +14,7 @@ def regex_escape(string):
 
 class WordHighlightListener(sublime_plugin.EventListener):
 	def on_selection_modified(self,view):
-		word_separators = view.settings().get('word_separators')
-		
+				
 		settings = sublime.load_settings('Word Highlight.sublime-settings')
 		color_scope_name = settings.get('color_scope_name', DEFAULT_COLOR_SCOPE_NAME)
 		draw_outlined = bool(settings.get('draw_outlined')) * sublime.DRAW_OUTLINED
@@ -30,9 +29,10 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			if len(sel) < 200 and len(sel) == len(view.word(sel)):
 				string = view.substr(sel).strip()
 				if len(string):
-					regions += view.find_all('\\b'+regex_escape(string)+'\\b')
+					regions += view.find_all('(?<![\\w])' + regex_escape(string)+'\\b')
 			elif len(sel) == 0 and bool(settings.get('highlight_when_selection_is_empty')):
+				word_separators = view.settings().get('word_separators')
 				string = view.substr(view.word(sel)).strip()
 				if len(string) and all([not c in word_separators for c in string]):
-					regions += view.find_all('\\b'+regex_escape(string)+'\\b')
+					regions += view.find_all('(?<![\\w])'+regex_escape(string)+'\\b')
 		view.add_regions("WordHighlight", regions, color_scope_name, draw_outlined)
