@@ -1,7 +1,12 @@
 import sublime
 import sublime_plugin
+from threading import Timer
 
 DEFAULT_COLOR_SCOPE_NAME = "comment"
+
+settings = sublime.load_settings('Word Highlight.sublime-settings')
+color_scope_name = settings.get('color_scope_name', DEFAULT_COLOR_SCOPE_NAME)
+draw_outlined = bool(settings.get('draw_outlined')) * sublime.DRAW_OUTLINED
 
 def regex_escape(string):
 	outstring = ""
@@ -12,13 +17,21 @@ def regex_escape(string):
 			outstring += '\\'
 	return outstring
 
+def delayed(seconds):
+	def decorator(f):
+		def wrapper(*args, **kargs):
+			if wrapper.timer:
+				wrapper.timer.cancel()
+				wrapper.timer = None
+			wrapper.timer = Timer(seconds, f, args, kargs)
+			wrapper.timer.start()
+		wrapper.timer = None
+		return wrapper
+	return decorator
+
 class WordHighlightListener(sublime_plugin.EventListener):
-	def on_selection_modified(self,view):
-				
-		settings = sublime.load_settings('Word Highlight.sublime-settings')
-		color_scope_name = settings.get('color_scope_name', DEFAULT_COLOR_SCOPE_NAME)
-		draw_outlined = bool(settings.get('draw_outlined')) * sublime.DRAW_OUTLINED
-		
+	@delayed(0.05)
+	def highlight_occurences(self,view):
 		regions = []
 		for sel in view.sel():
 			#If we directly compare sel and view.word(sel), then it compares their
@@ -36,3 +49,6 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				if len(string) and all([not c in word_separators for c in string]):
 					regions += view.find_all('(?<![\\w])'+regex_escape(string)+'\\b')
 		view.add_regions("WordHighlight", regions, color_scope_name, draw_outlined)
+
+	def on_selection_modified(self,view):
+		self.highlight_occurences(view)
