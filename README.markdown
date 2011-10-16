@@ -2,11 +2,28 @@ What it does
 ------------
 
 This plugin highlights all copies of a word that's currently selected, or,
-optionally, selects all copies of a word that contains an insertion point.
+optionally, highlights all copies of a word which currently has the insertion cursor upon it.
 
+Install
+-------
+
+Go to your Packages subdirectory under ST2's data directory:
+
+* Windows: %APPDATA%\Sublime Text 2
+* OS X: ~/Library/Application Support/Sublime Text 2
+* Linux: ~/.config/sublime-text-2
+* Portable Installation: Sublime Text 2/Data
+
+Then clone this repository:
+
+    git clone git://github.com/SublimeText/WordHighlight.git
+    
+That's it!
 
 Options
 -------
+
+Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime-settings` file:
 
 *	`"draw_outlined" : true`
 	
