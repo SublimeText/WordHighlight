@@ -5,8 +5,6 @@ from threading import Timer
 DEFAULT_COLOR_SCOPE_NAME = "comment"
 
 settings = sublime.load_settings('Word Highlight.sublime-settings')
-color_scope_name = settings.get('color_scope_name', DEFAULT_COLOR_SCOPE_NAME)
-draw_outlined = bool(settings.get('draw_outlined')) * sublime.DRAW_OUTLINED
 
 def regex_escape(string):
 	outstring = ""
@@ -55,6 +53,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				if len(string) and all([not c in word_separators for c in string]):
 					regions += view.find_all('(?<![\\w])'+regex_escape(string)+'\\b')
 		if self.prev_regions != regions:
+			color_scope_name = settings.get('color_scope_name', DEFAULT_COLOR_SCOPE_NAME)
+			draw_outlined = bool(settings.get('draw_outlined')) * sublime.DRAW_OUTLINED
 			view.add_regions("WordHighlight", regions, color_scope_name, draw_outlined)
 			self.prev_regions = regions
 	prev_regions = []
