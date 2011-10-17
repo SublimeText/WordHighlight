@@ -30,7 +30,13 @@ def delayed(seconds):
 	return decorator
 
 class WordHighlightListener(sublime_plugin.EventListener):
-	@delayed(0.05)
+	# This may need adjusting, or may be taken out altogether (once the selection bug is gone)
+	@delayed(0.25)
+	def pend_highlight_occurences(self,view):
+		# Would execute highlight_occurences code directly, but it is not allowed
+		# from thread (which we are currently in) under Windows OS. Therefore, queue.
+		sublime.set_timeout(lambda: self.highlight_occurences(view), 0)
+
 	def highlight_occurences(self,view):
 		regions = []
 		for sel in view.sel():
@@ -48,7 +54,10 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				string = view.substr(view.word(sel)).strip()
 				if len(string) and all([not c in word_separators for c in string]):
 					regions += view.find_all('(?<![\\w])'+regex_escape(string)+'\\b')
-		view.add_regions("WordHighlight", regions, color_scope_name, draw_outlined)
+		if self.prev_regions != regions:
+			view.add_regions("WordHighlight", regions, color_scope_name, draw_outlined)
+			self.prev_regions = regions
+	prev_regions = []
 
 	def on_selection_modified(self,view):
-		self.highlight_occurences(view)
+		self.pend_highlight_occurences(view)
