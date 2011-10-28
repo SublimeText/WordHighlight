@@ -3,19 +3,19 @@ import sublime_plugin
 import re
 from threading import Timer
 
-s = sublime.load_settings('Word Highlight.sublime-settings')
+settings = sublime.load_settings('Word Highlight.sublime-settings')
 
 class Pref:
 	def load(self):
-		Pref.color_scope_name                  	= s.get('color_scope_name', "comment")
-		Pref.draw_outlined                     	= bool(s.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
-		Pref.highlight_when_selection_is_empty 	= bool(s.get('highlight_when_selection_is_empty', True))
+		Pref.color_scope_name                  	= settings.get('color_scope_name', "comment")
+		Pref.draw_outlined                     	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
+		Pref.highlight_when_selection_is_empty 	= bool(settings.get('highlight_when_selection_is_empty', True))
 
 Pref().load();
 
-s.add_on_change('color_scope_name',                  lambda:Pref().load())
-s.add_on_change('draw_outlined',                     lambda:Pref().load())
-s.add_on_change('highlight_when_selection_is_empty', lambda:Pref().load())
+settings.add_on_change('color_scope_name',                  lambda:Pref().load())
+settings.add_on_change('draw_outlined',                     lambda:Pref().load())
+settings.add_on_change('highlight_when_selection_is_empty', lambda:Pref().load())
 
 def delayed(seconds):
 	def decorator(f):
