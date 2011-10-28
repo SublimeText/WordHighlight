@@ -47,16 +47,16 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		for sel in view.sel():
 			if sel.empty() and Pref.highlight_when_selection_is_empty:
 				string = view.substr(view.word(sel)).strip()
-				if len(string) and all([not c in Pref.word_separators for c in string]):
+				if string and all([not c in Pref.word_separators for c in string]):
 					regions += view.find_all('(?<![\\w])'+re.escape(string)+'\\b')
 			else:
 				word = view.word(sel)
 				if word.end() == sel.end() and word.begin() == sel.begin() :
 					string = view.substr(word).strip()
-					if len(string):
+					if string:
 						regions += view.find_all('(?<![\\w])'+re.escape(string)+'\\b')
 		if self.prev_regions != regions:
 			view.erase_regions("WordHighlight")
-			if len(regions):
+			if regions:
 				view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.draw_outlined)
 			self.prev_regions = regions
