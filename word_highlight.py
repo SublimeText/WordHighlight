@@ -1,6 +1,7 @@
 import sublime
 import sublime_plugin
 import re
+from threading import Timer
 
 s = sublime.load_settings('Word Highlight.sublime-settings')
 
@@ -16,6 +17,18 @@ s.add_on_change('color_scope_name',                  lambda:Pref().load())
 s.add_on_change('draw_outlined',                     lambda:Pref().load())
 s.add_on_change('highlight_when_selection_is_empty', lambda:Pref().load())
 
+def delayed(seconds):
+	def decorator(f):
+		def wrapper(*args, **kargs):
+			if wrapper.timer:
+				wrapper.timer.cancel()
+				wrapper.timer = None
+			wrapper.timer = Timer(seconds, f, args, kargs)
+			wrapper.timer.start()
+		wrapper.timer = None
+		return wrapper
+	return decorator
+
 class WordHighlightListener(sublime_plugin.EventListener):
 	prev_regions = []
 
@@ -23,6 +36,13 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		Pref.word_separators = view.settings().get('word_separators')
 
 	def on_selection_modified(self, view):
+		self.pend_highlight_occurences(view)
+
+	@delayed(0.04)
+	def pend_highlight_occurences(self, view):
+		sublime.set_timeout(lambda: self.highlight_occurences(view), 0)
+
+	def highlight_occurences(self, view):
 		regions = []
 		for sel in view.sel():
 			if sel.empty() and Pref.highlight_when_selection_is_empty:
