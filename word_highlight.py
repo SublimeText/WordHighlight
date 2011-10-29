@@ -1,34 +1,23 @@
 import sublime
 import sublime_plugin
 import re
-from threading import Timer
+import time
 
 settings = sublime.load_settings('Word Highlight.sublime-settings')
 
 class Pref:
 	def load(self):
-		Pref.color_scope_name                 	= settings.get('color_scope_name', "comment")
-		Pref.draw_outlined                    	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
-		Pref.highlight_when_selection_is_empty	= bool(settings.get('highlight_when_selection_is_empty', True))
-		Pref.word_separators                  	= []
+		Pref.color_scope_name                  	= settings.get('color_scope_name', "comment")
+		Pref.draw_outlined                     	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
+		Pref.highlight_when_selection_is_empty 	= bool(settings.get('highlight_when_selection_is_empty', True))
+		Pref.word_separators										= []
+		Pref.timing 														= time.time()
 
 Pref().load();
 
 settings.add_on_change('color_scope_name',                  lambda:Pref().load())
 settings.add_on_change('draw_outlined',                     lambda:Pref().load())
 settings.add_on_change('highlight_when_selection_is_empty', lambda:Pref().load())
-
-def delayed(seconds):
-	def decorator(f):
-		def wrapper(*args, **kargs):
-			if wrapper.timer:
-				wrapper.timer.cancel()
-				wrapper.timer = None
-			wrapper.timer = Timer(seconds, f, args, kargs)
-			wrapper.timer.start()
-		wrapper.timer = None
-		return wrapper
-	return decorator
 
 class WordHighlightListener(sublime_plugin.EventListener):
 	prev_regions = []
@@ -37,11 +26,13 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		Pref.word_separators = view.settings().get('word_separators')
 
 	def on_selection_modified(self, view):
-		self.pend_highlight_occurences(view)
-
-	@delayed(0.04)
-	def pend_highlight_occurences(self, view):
-		sublime.set_timeout(lambda: self.highlight_occurences(view), 0)
+		now = time.time()
+		if now - Pref.timing > 0.05:
+			# print ' same thread'
+			self.highlight_occurences(view)
+			Pref.timing = now
+		else:
+			Pref.timing = now
 
 	def highlight_occurences(self, view):
 		regions = []
