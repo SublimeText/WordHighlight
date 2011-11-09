@@ -37,7 +37,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		Pref.word_separators = view.settings().get('word_separators')
 
 	def on_selection_modified(self, view):
-		self.pend_highlight_occurences(view)
+		if not view.settings().get('is_widget'):
+			self.pend_highlight_occurences(view)
 
 	@delayed(0.04)
 	def pend_highlight_occurences(self, view):
