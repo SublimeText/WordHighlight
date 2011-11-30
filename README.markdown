@@ -35,6 +35,11 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 	This makes words highlight when the insertion point is inside of them but when
 	they're not actually selected.
 
+*	`"selection_delay" : 0.04`
+	
+	This delays highlighting all occurences using given time (in seconds) to let users move cursor 
+	around without being distracted with immediate highlights. Default value 0.04 means almost no delay.
+
 *	`"color_scope_name" : "wordhighlight"`
 	
 	Normally the color of the highlights is the same as the color of comments in
