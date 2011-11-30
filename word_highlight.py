@@ -8,6 +8,7 @@ settings = sublime.load_settings('Word Highlight.sublime-settings')
 class Pref:
 	def load(self):
 		Pref.color_scope_name                 	= settings.get('color_scope_name', "comment")
+		Pref.selection_delay					= settings.get('selection_delay', 0.04)
 		Pref.draw_outlined                    	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
 		Pref.highlight_when_selection_is_empty	= bool(settings.get('highlight_when_selection_is_empty', True))
 		Pref.word_separators                  	= []
@@ -40,7 +41,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		if not view.settings().get('is_widget'):
 			self.pend_highlight_occurences(view)
 
-	@delayed(0.04)
+	@delayed(Pref.selection_delay)
 	def pend_highlight_occurences(self, view):
 		sublime.set_timeout(lambda: self.highlight_occurences(view), 0)
 
