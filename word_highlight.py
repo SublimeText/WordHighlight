@@ -7,8 +7,8 @@ settings = sublime.load_settings('Word Highlight.sublime-settings')
 
 class Pref:
 	def load(self):
-		Pref.color_scope_name                 	= settings.get('color_scope_name', "comment")
-		Pref.selection_delay					= settings.get('selection_delay', 0.04)
+		Pref.color_scope_name               	= settings.get('color_scope_name', "comment")
+		Pref.selection_delay                    = settings.get('selection_delay', 0.04)
 		Pref.draw_outlined                    	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
 		Pref.highlight_when_selection_is_empty	= bool(settings.get('highlight_when_selection_is_empty', True))
 		Pref.word_separators                  	= []
