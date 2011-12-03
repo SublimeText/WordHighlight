@@ -1,0 +1,3 @@
+[
+	{ "keys": ["alt+enter"], "command": "word_highlight" }
+]
