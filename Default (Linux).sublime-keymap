@@ -1,0 +1,5 @@
+[
+	{ "keys": ["alt+enter"], "command": "select_highlighted_words", "context":
+		[ { "key": "selection_empty", "operator": "equal", "operand": false } ]
+	}
+]
