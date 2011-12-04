@@ -61,10 +61,13 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		if self.prev_regions != regions:
 			view.erase_regions("WordHighlight")
 			if regions:
-				message = str(len(regions)) + ' Occurrences of  "' + string + '"'
-				view.set_status("WordHighlight", message)
-
 				view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.draw_outlined)
+				
+				#We read the length of get_regions because duplicate regions are
+				#removed when they're added to the view.
+				occurrences = len(view.get_regions("WordHighlight"))
+				message = str(occurrences) + ' occurrence' + ('s' if occurrences != 1 else '') + ' of "' + string + '"'
+				view.set_status("WordHighlight", message)
 			else:
 				view.erase_status("WordHighlight")
 			self.prev_regions = regions
