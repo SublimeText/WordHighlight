@@ -31,6 +31,12 @@ def delayed(seconds):
 		return wrapper
 	return decorator
 
+class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
+	def run(self, edit):
+		wh = self.view.get_regions("WordHighlight")
+		for w in wh:
+				self.view.sel().add(w)
+
 class WordHighlightListener(sublime_plugin.EventListener):
 	prev_regions = []
 
