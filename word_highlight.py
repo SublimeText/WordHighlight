@@ -7,11 +7,12 @@ settings = sublime.load_settings('Word Highlight.sublime-settings')
 
 class Pref:
 	def load(self):
-		Pref.color_scope_name                 	= settings.get('color_scope_name', "comment")
-		Pref.selection_delay                  	= settings.get('selection_delay', 0.04)
-		Pref.draw_outlined                    	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
-		Pref.highlight_when_selection_is_empty	= bool(settings.get('highlight_when_selection_is_empty', True))
-		Pref.word_separators                  	= []
+		Pref.color_scope_name                                   	= settings.get('color_scope_name', "comment")
+		Pref.selection_delay                                    	= settings.get('selection_delay', 0.04)
+		Pref.draw_outlined                                      	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
+		Pref.highlight_when_selection_is_empty                  	= bool(settings.get('highlight_when_selection_is_empty', False))
+		Pref.highlight_word_under_cursor_when_selection_is_empty	= bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
+		Pref.word_separators                                    	= []
 
 Pref().load()
 
@@ -58,6 +59,9 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				string = view.substr(view.word(sel)).strip()
 				if string and all([not c in Pref.word_separators for c in string]):
 					regions += view.find_all('(?<![\\w])'+re.escape(string)+'\\b')
+				if not Pref.highlight_word_under_cursor_when_selection_is_empty:
+					for s in view.sel():
+						regions = [r for r in regions if not r.contains(s)]
 			else:
 				word = view.word(sel)
 				if word.end() == sel.end() and word.begin() == sel.begin() :

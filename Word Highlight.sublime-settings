@@ -1,5 +1,7 @@
 {
 	"draw_outlined": true,
 	"selection_delay": 0.04,
-	"highlight_when_selection_is_empty": false
+	"highlight_when_selection_is_empty": false,
+	"highlight_word_under_cursor_when_selection_is_empty": false
 }
+
