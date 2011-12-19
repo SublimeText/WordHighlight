@@ -16,6 +16,8 @@ class Pref:
 
 Pref().load()
 
+g_enabled = True
+
 settings.add_on_change('color_scope_name',                  lambda:Pref().load())
 settings.add_on_change('draw_outlined',                     lambda:Pref().load())
 settings.add_on_change('highlight_when_selection_is_empty', lambda:Pref().load())
@@ -32,11 +34,24 @@ def delayed(seconds):
 		return wrapper
 	return decorator
 
+
+class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
+    def run(self, enabled=None):
+        global g_enabled
+        if enabled is None:
+            enabled = not g_enabled
+        g_enabled = enabled
+
+    def description(self):
+        return 'Disable' if g_enabled else 'Enable'
+
+
 class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
 		wh = self.view.get_regions("WordHighlight")
 		for w in wh:
-				self.view.sel().add(w)
+			self.view.sel().add(w)
+
 
 class WordHighlightListener(sublime_plugin.EventListener):
 	prev_regions = []
@@ -45,7 +60,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		Pref.word_separators = view.settings().get('word_separators')
 
 	def on_selection_modified(self, view):
-		if not view.settings().get('is_widget'):
+		if g_enabled and not view.settings().get('is_widget'):
 			self.pend_highlight_occurences(view)
 
 	@delayed(Pref.selection_delay)
