@@ -1,7 +1,7 @@
 import sublime
 import sublime_plugin
 import re
-from threading import Timer
+import time
 
 settings = sublime.load_settings('Word Highlight.sublime-settings')
 
@@ -13,6 +13,7 @@ class Pref:
 		Pref.highlight_when_selection_is_empty                  	= bool(settings.get('highlight_when_selection_is_empty', False))
 		Pref.highlight_word_under_cursor_when_selection_is_empty	= bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
 		Pref.word_separators                                    	= []
+		Pref.timing 																							= time.time()
 
 Pref().load()
 
@@ -20,17 +21,6 @@ settings.add_on_change('color_scope_name',                  lambda:Pref().load()
 settings.add_on_change('draw_outlined',                     lambda:Pref().load())
 settings.add_on_change('highlight_when_selection_is_empty', lambda:Pref().load())
 
-def delayed(seconds):
-	def decorator(f):
-		def wrapper(*args, **kargs):
-			if wrapper.timer:
-				wrapper.timer.cancel()
-				wrapper.timer = None
-			wrapper.timer = Timer(seconds, f, args, kargs)
-			wrapper.timer.start()
-		wrapper.timer = None
-		return wrapper
-	return decorator
 
 class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
@@ -46,11 +36,12 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
 	def on_selection_modified(self, view):
 		if not view.settings().get('is_widget'):
-			self.pend_highlight_occurences(view)
-
-	@delayed(Pref.selection_delay)
-	def pend_highlight_occurences(self, view):
-		sublime.set_timeout(lambda: self.highlight_occurences(view), 0)
+			now = time.time()
+			if now - Pref.timing > Pref.selection_delay:
+				self.highlight_occurences(view)
+				Pref.timing = now
+			else:
+				Pref.timing = now
 
 	def highlight_occurences(self, view):
 		regions = []
