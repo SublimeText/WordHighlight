@@ -54,8 +54,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
 	def highlight_occurences(self, view):
 		regions = []
-		occurrenceMessage = []
-		occurrenceCount = 0
+		occurrencesMessage = []
+		occurrencesCount = 0
 		for sel in view.sel():
 			if sel.empty() and Pref.highlight_when_selection_is_empty:
 				string = view.substr(view.word(sel)).strip()
@@ -70,14 +70,15 @@ class WordHighlightListener(sublime_plugin.EventListener):
 					string = view.substr(word).strip()
 					if string:
 						regions += view.find_all('(?<![\\w])'+re.escape(string)+'\\b')
-			occurrences = len(regions)-occurrenceCount;
-			occurrenceMessage.append(str(occurrences) + ' occurrence' + ('s' if occurrences != 1 else '') + ' of "' + string + '"')
-			occurrenceCount = occurrenceCount + len(regions)
+			occurrences = len(regions)-occurrencesCount;
+			if occurrences > 0:
+				occurrencesMessage.append(str(occurrences) + ' occurrence' + ('s' if occurrences != 1 else '') + ' of "' + string + '"')
+				occurrencesCount = occurrencesCount + occurrences
 		if self.prev_regions != regions:
 			view.erase_regions("WordHighlight")
 			if regions:
 				view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.draw_outlined)
-				view.set_status("WordHighlight", ", ".join(occurrenceMessage))
+				view.set_status("WordHighlight", ", ".join(list(set(occurrencesMessage))))
 			else:
 				view.erase_status("WordHighlight")
 			self.prev_regions = regions
