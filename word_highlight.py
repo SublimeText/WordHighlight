@@ -4,6 +4,7 @@ import re
 import time
 
 settings = sublime.load_settings('Word Highlight.sublime-settings')
+settings_base = sublime.load_settings('Base File.sublime-settings')
 
 class Pref:
 	def load(self):
@@ -12,7 +13,7 @@ class Pref:
 		Pref.draw_outlined                                      	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
 		Pref.highlight_when_selection_is_empty                  	= bool(settings.get('highlight_when_selection_is_empty', False))
 		Pref.highlight_word_under_cursor_when_selection_is_empty	= bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
-		Pref.word_separators                                    	= []
+		Pref.word_separators                                    	= settings_base.get('word_separators')
 		Pref.timing 																							= time.time()
 
 Pref().load()
@@ -20,6 +21,7 @@ Pref().load()
 settings.add_on_change('color_scope_name',                  lambda:Pref().load())
 settings.add_on_change('draw_outlined',                     lambda:Pref().load())
 settings.add_on_change('highlight_when_selection_is_empty', lambda:Pref().load())
+settings_base.add_on_change('word_separators',              lambda:Pref().load())
 
 
 class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
@@ -31,8 +33,9 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 class WordHighlightListener(sublime_plugin.EventListener):
 	prev_regions = []
 
-	def on_activate(self, view):
-		Pref.word_separators = view.settings().get('word_separators')
+	def on_activated(self, view):
+		if not view.is_loading():
+			Pref.word_separators = view.settings().get('word_separators') or settings_base.get('word_separators')
 
 	def on_selection_modified(self, view):
 		if not view.settings().get('is_widget'):
