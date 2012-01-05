@@ -63,6 +63,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				Pref.timing = now
 			else:
 				Pref.timing = now
+		elif not g_enabled:
+			view.erase_regions("WordHighlight")
 
 	def highlight_occurences(self, view):
 		regions = []
