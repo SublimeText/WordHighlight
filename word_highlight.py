@@ -13,7 +13,8 @@ class Pref:
 		Pref.draw_outlined                                      	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
 		Pref.highlight_when_selection_is_empty                  	= bool(settings.get('highlight_when_selection_is_empty', False))
 		Pref.highlight_word_under_cursor_when_selection_is_empty	= bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
-		Pref.word_separators                                    	= settings_base.get('word_separators')
+		Pref.word_separators		                                 	= settings_base.get('word_separators')
+		Pref.file_size_limit																			= int(settings.get('file_size_limit', 4194304))
 		Pref.timing 																							= time.time()
 
 Pref().load()
@@ -39,7 +40,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			Pref.word_separators = view.settings().get('word_separators') or settings_base.get('word_separators')
 
 	def on_selection_modified(self, view):
-		if not view.settings().get('is_widget'):
+		if not view.settings().get('is_widget') and view.size() <= Pref.file_size_limit:
 			now = time.time()
 			if now - Pref.timing > Pref.selection_delay:
 				self.highlight_occurences(view)
