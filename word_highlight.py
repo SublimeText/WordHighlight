@@ -13,17 +13,19 @@ class Pref:
 		Pref.draw_outlined                                      	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
 		Pref.highlight_when_selection_is_empty                  	= bool(settings.get('highlight_when_selection_is_empty', False))
 		Pref.highlight_word_under_cursor_when_selection_is_empty	= bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
-		Pref.word_separators		                                 	= settings_base.get('word_separators')
 		Pref.file_size_limit																			= int(settings.get('file_size_limit', 4194304))
+		Pref.word_separators		                                 	= settings_base.get('word_separators')
 		Pref.timing 																							= time.time()
 
 Pref().load()
 
-settings.add_on_change('color_scope_name',                  lambda:Pref().load())
-settings.add_on_change('draw_outlined',                     lambda:Pref().load())
-settings.add_on_change('highlight_when_selection_is_empty', lambda:Pref().load())
-settings.add_on_change('highlight_when_selection_is_empty', lambda:Pref().load())
-settings_base.add_on_change('word_separators', 							lambda:Pref().load())
+settings.add_on_change('color_scope_name',                                    lambda:Pref().load())
+settings.add_on_change('selection_delay',                                     lambda:Pref().load())
+settings.add_on_change('draw_outlined',                                       lambda:Pref().load())
+settings.add_on_change('highlight_when_selection_is_empty',                   lambda:Pref().load())
+settings.add_on_change('highlight_word_under_cursor_when_selection_is_empty', lambda:Pref().load())
+settings.add_on_change('file_size_limit',                                     lambda:Pref().load())
+settings_base.add_on_change('word_separators', 							                  lambda:Pref().load())
 
 
 class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
