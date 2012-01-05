@@ -3,3 +3,4 @@
 *.sublime-project
 *.hgignore
 *.hgtags
+package-metadata.json
