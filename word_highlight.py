@@ -19,10 +19,13 @@ class Pref:
 
 Pref().load()
 
-settings.add_on_change('color_scope_name',                  lambda:Pref().load())
-settings.add_on_change('draw_outlined',                     lambda:Pref().load())
-settings.add_on_change('highlight_when_selection_is_empty', lambda:Pref().load())
-settings_base.add_on_change('word_separators',              lambda:Pref().load())
+settings.add_on_change('color_scope_name',                                   	lambda:Pref().load())
+settings.add_on_change('selection_delay',                                    	lambda:Pref().load())
+settings.add_on_change('draw_outlined',                                      	lambda:Pref().load())
+settings.add_on_change('highlight_when_selection_is_empty',                  	lambda:Pref().load())
+settings.add_on_change('highlight_word_under_cursor_when_selection_is_empty',	lambda:Pref().load())
+settings.add_on_change('file_size_limit',                                    	lambda:Pref().load())
+settings_base.add_on_change('word_separators',                               	lambda:Pref().load())
 
 
 class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
