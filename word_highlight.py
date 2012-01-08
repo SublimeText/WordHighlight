@@ -67,6 +67,12 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				Pref.timing = now
 
 	def highlight_occurences(self, view):
+		if not Pref.highlight_when_selection_is_empty and not view.has_non_empty_selection_region():
+			view.erase_status("WordHighlight")
+			view.erase_regions("WordHighlight")
+			self.prev_regions = None
+			return
+
 		regions = []
 		occurrencesMessage = []
 		occurrencesCount = 0
