@@ -51,6 +51,11 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 		for w in wh:
 			self.view.sel().add(w)
 
+class WordHighlightDoubleClickCommand(sublime_plugin.TextCommand):
+	def run(self, edit):
+		view = self.view
+		if Pref.enabled and not view.settings().get('is_widget'):
+			WordHighlightListener().highlight_occurences(view)
 
 class WordHighlightListener(sublime_plugin.EventListener):
 
@@ -64,17 +69,13 @@ class WordHighlightListener(sublime_plugin.EventListener):
 	def on_selection_modified(self, view):
 		if Pref.enabled and not view.settings().get('is_widget'):
 			now = time.time()
-			if now - Pref.timing > 0.04:
+			if now - Pref.timing > 0.06:
 				Pref.timing = now
 				self.highlight_occurences(view)
 			else:
 				Pref.timing = now
-				sublime.set_timeout(lambda:self.highlight_occurences(view, now), 10)
 
-	def highlight_occurences(self, view, timed = False):
-		if timed != False and timed != Pref.timing:
-			return
-
+	def highlight_occurences(self, view):
 		if not Pref.highlight_when_selection_is_empty and not view.has_non_empty_selection_region():
 			view.erase_status("WordHighlight")
 			view.erase_regions("WordHighlight")
@@ -92,7 +93,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		else:
 			limited_size = True
 		
-		#print 'running'+ str(time.time())
+		# print 'running'+ str(time.time())
 
 		regions = []
 		processedWords = []
