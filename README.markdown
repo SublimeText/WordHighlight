@@ -65,4 +65,9 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 
 * `"file_size_limit" : 4194304`
 	
-	Files bigger than this number will disable WordHighlight 
+	Files bigger than this number will put WordHighlight on mode "highlight around view port" (a portion of the document)
+
+* `"when_file_size_limit_search_this_num_of_characters" : 20000`
+	
+	When a file is bigger than the previous setting. This controls how many characters below and above the  view port you want to search for words to highlight
+
