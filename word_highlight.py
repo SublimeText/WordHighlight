@@ -17,6 +17,8 @@ class Pref:
 		Pref.file_size_limit                                    	= int(settings.get('file_size_limit', 4194304))
 		Pref.timing                                             	= time.time()
 		Pref.enabled                                             	= True
+		Pref.prev_selections 																			= None
+		Pref.prev_regions 																				= None
 
 Pref().load()
 
@@ -49,9 +51,9 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 
 
 class WordHighlightListener(sublime_plugin.EventListener):
-	prev_regions = []
 
 	def on_activated(self, view):
+		Pref.prev_selections = None
 		if not view.is_loading():
 			Pref.word_separators = view.settings().get('word_separators') or settings_base.get('word_separators')
 			if not Pref.enabled:
@@ -70,9 +72,13 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		if not Pref.highlight_when_selection_is_empty and not view.has_non_empty_selection_region():
 			view.erase_status("WordHighlight")
 			view.erase_regions("WordHighlight")
-			self.prev_regions = None
+			Pref.prev_regions = None
 			return
-
+		prev_selections = str(view.sel())
+		if Pref.prev_selections == prev_selections:
+			return
+		else:
+			Pref.prev_selections = prev_selections
 		regions = []
 		occurrencesMessage = []
 		occurrencesCount = 0
@@ -94,11 +100,11 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			if occurrences > 0:
 				occurrencesMessage.append(str(occurrences) + ' occurrence' + ('s' if occurrences != 1 else '') + ' of "' + string + '"')
 				occurrencesCount = occurrencesCount + occurrences
-		if self.prev_regions != regions:
+		if Pref.prev_regions != regions:
 			view.erase_regions("WordHighlight")
 			if regions:
 				view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.draw_outlined)
 				view.set_status("WordHighlight", ", ".join(list(set(occurrencesMessage))))
 			else:
 				view.erase_status("WordHighlight")
-			self.prev_regions = regions
+			Pref.prev_regions = regions
