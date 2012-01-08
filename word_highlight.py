@@ -15,6 +15,7 @@ class Pref:
 		Pref.highlight_word_under_cursor_when_selection_is_empty	= bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
 		Pref.word_separators                                    	= settings_base.get('word_separators')
 		Pref.file_size_limit                                    	= int(settings.get('file_size_limit', 4194304))
+		Pref.when_file_size_limit_search_this_num_of_characters		= int(settings.get('when_file_size_limit_search_this_num_of_characters', 20000))
 		Pref.timing                                             	= time.time()
 		Pref.enabled                                             	= True
 		Pref.prev_selections 																			= None
@@ -28,6 +29,7 @@ settings.add_on_change('draw_outlined',                                      	la
 settings.add_on_change('highlight_when_selection_is_empty',                  	lambda:Pref().load())
 settings.add_on_change('highlight_word_under_cursor_when_selection_is_empty',	lambda:Pref().load())
 settings.add_on_change('file_size_limit',                                    	lambda:Pref().load())
+settings.add_on_change('when_file_size_limit_search_this_num_of_characters',	lambda:Pref().load())
 settings_base.add_on_change('word_separators',                               	lambda:Pref().load())
 
 
@@ -60,7 +62,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				view.erase_regions("WordHighlight")
 
 	def on_selection_modified(self, view):
-		if Pref.enabled and view.size() <= Pref.file_size_limit and not view.settings().get('is_widget'):
+		if Pref.enabled and not view.settings().get('is_widget'):
 			now = time.time()
 			if now - Pref.timing > Pref.selection_delay:
 				Pref.timing = now
@@ -79,6 +81,12 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			return
 		else:
 			Pref.prev_selections = prev_selections
+
+		if view.size() <= Pref.file_size_limit:
+			limited_size = False
+		else:
+			limited_size = True
+
 		regions = []
 		occurrencesMessage = []
 		occurrencesCount = 0
@@ -86,7 +94,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			if Pref.highlight_when_selection_is_empty and sel.empty():
 				string = view.substr(view.word(sel)).strip()
 				if string and all([not c in Pref.word_separators for c in string]):
-					regions += view.find_all('(?<![\\w])'+re.escape(string)+'\\b')
+					regions = self.find_regions(view, regions, string, limited_size)
 				if not Pref.highlight_word_under_cursor_when_selection_is_empty:
 					for s in view.sel():
 						regions = [r for r in regions if not r.contains(s)]
@@ -94,8 +102,9 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				word = view.word(sel)
 				if word.end() == sel.end() and word.begin() == sel.begin():
 					string = view.substr(word).strip()
-					if string:
-						regions += view.find_all('(?<![\\w])'+re.escape(string)+'\\b')
+					if string and all([not c in Pref.word_separators for c in string]):
+						regions = self.find_regions(view, regions, string, limited_size)
+
 			occurrences = len(regions)-occurrencesCount;
 			if occurrences > 0:
 				occurrencesMessage.append(str(occurrences) + ' occurrence' + ('s' if occurrences != 1 else '') + ' of "' + string + '"')
@@ -104,7 +113,30 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			view.erase_regions("WordHighlight")
 			if regions:
 				view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.draw_outlined)
-				view.set_status("WordHighlight", ", ".join(list(set(occurrencesMessage))))
+				view.set_status("WordHighlight", ", ".join(list(set(occurrencesMessage))) + (' found on a limited portion of the document ' if limited_size else ''))
 			else:
 				view.erase_status("WordHighlight")
 			Pref.prev_regions = regions
+	
+	def find_regions(self, view, regions, string, limited_size):
+		if not limited_size:
+			regions += view.find_all(r'(?<![\\w])'+re.escape(string)+'\\b')
+		else:
+			chars = Pref.when_file_size_limit_search_this_num_of_characters
+			visible_region = view.visible_region()
+			begin = 0 if visible_region.begin() - chars < 0 else visible_region.begin() - chars
+			end = visible_region.end() + chars
+			from_point = begin
+			search = r'(?<![\\w])'+re.escape(string)+'\\b'
+			while True:
+				region = view.find(search, from_point)
+				if region:
+					regions.append(region)
+					if region.end() > end:
+						break
+					else:
+						from_point = region.end()
+				else:
+					break
+		return regions
+
