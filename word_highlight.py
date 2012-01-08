@@ -9,7 +9,7 @@ settings_base = sublime.load_settings('Base File.sublime-settings')
 class Pref:
 	def load(self):
 		Pref.color_scope_name                                   	= settings.get('color_scope_name', "comment")
-		Pref.selection_delay                                    	= settings.get('selection_delay', 0.04)
+		Pref.highlight_delay                                    	= settings.get('highlight_delay', 0)
 		Pref.draw_outlined                                      	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
 		Pref.highlight_when_selection_is_empty                  	= bool(settings.get('highlight_when_selection_is_empty', False))
 		Pref.highlight_word_under_cursor_when_selection_is_empty	= bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
@@ -24,7 +24,7 @@ class Pref:
 Pref().load()
 
 settings.add_on_change('color_scope_name',                                   	lambda:Pref().load())
-settings.add_on_change('selection_delay',                                    	lambda:Pref().load())
+settings.add_on_change('highlight_delay',                                    	lambda:Pref().load())
 settings.add_on_change('draw_outlined',                                      	lambda:Pref().load())
 settings.add_on_change('highlight_when_selection_is_empty',                  	lambda:Pref().load())
 settings.add_on_change('highlight_word_under_cursor_when_selection_is_empty',	lambda:Pref().load())
@@ -64,16 +64,17 @@ class WordHighlightListener(sublime_plugin.EventListener):
 	def on_selection_modified(self, view):
 		if Pref.enabled and not view.settings().get('is_widget'):
 			now = time.time()
-			if now - Pref.timing > Pref.selection_delay:
+			if now - Pref.timing > 0.04:
 				Pref.timing = now
 				self.highlight_occurences(view)
 			else:
 				Pref.timing = now
-				sublime.set_timeout(lambda:self.highlight_occurences(view, now), 0)
+				sublime.set_timeout(lambda:self.highlight_occurences(view, now), 10)
 
 	def highlight_occurences(self, view, timed = False):
 		if timed != False and timed != Pref.timing:
 			return
+
 		if not Pref.highlight_when_selection_is_empty and not view.has_non_empty_selection_region():
 			view.erase_status("WordHighlight")
 			view.erase_regions("WordHighlight")
@@ -92,6 +93,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			limited_size = True
 		
 		#print 'running'+ str(time.time())
+
 		regions = []
 		processedWords = []
 		occurrencesMessage = []
@@ -122,8 +124,11 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		if Pref.prev_regions != regions:
 			view.erase_regions("WordHighlight")
 			if regions:
-				view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.draw_outlined)
-				view.set_status("WordHighlight", ", ".join(list(set(occurrencesMessage))) + (' found on a limited portion of the document ' if limited_size else ''))
+				if Pref.highlight_delay == 0:
+					view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.draw_outlined)
+					view.set_status("WordHighlight", ", ".join(list(set(occurrencesMessage))) + (' found on a limited portion of the document ' if limited_size else ''))
+				else:
+					sublime.set_timeout(lambda:self.delayed_highlight(view, regions, occurrencesMessage, limited_size), Pref.highlight_delay)
 			else:
 				view.erase_status("WordHighlight")
 			Pref.prev_regions = regions
@@ -150,3 +155,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 					break
 		return regions
 
+	def delayed_highlight(self, view, regions, occurrencesMessage, limited_size):
+		if regions == Pref.prev_regions:
+			view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.draw_outlined)
+			view.set_status("WordHighlight", ", ".join(list(set(occurrencesMessage))) + (' found on a limited portion of the document ' if limited_size else ''))
