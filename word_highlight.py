@@ -69,12 +69,16 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				self.highlight_occurences(view)
 			else:
 				Pref.timing = now
+				sublime.set_timeout(lambda:self.highlight_occurences(view, now), 0)
 
-	def highlight_occurences(self, view):
+	def highlight_occurences(self, view, timed = False):
+		if timed != False and timed != Pref.timing:
+			return
 		if not Pref.highlight_when_selection_is_empty and not view.has_non_empty_selection_region():
 			view.erase_status("WordHighlight")
 			view.erase_regions("WordHighlight")
 			Pref.prev_regions = None
+			Pref.prev_selections = None
 			return
 		prev_selections = str(view.sel())
 		if Pref.prev_selections == prev_selections:
@@ -86,7 +90,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			limited_size = False
 		else:
 			limited_size = True
-
+		
+		#print 'running'+ str(time.time())
 		regions = []
 		processedWords = []
 		occurrencesMessage = []
