@@ -51,11 +51,13 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 		for w in wh:
 			self.view.sel().add(w)
 
-class WordHighlightDoubleClickCommand(sublime_plugin.TextCommand):
+
+class WordHighlightClickCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
 		view = self.view
 		if Pref.enabled and not view.settings().get('is_widget'):
 			WordHighlightListener().highlight_occurences(view)
+
 
 class WordHighlightListener(sublime_plugin.EventListener):
 
@@ -69,7 +71,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 	def on_selection_modified(self, view):
 		if Pref.enabled and not view.settings().get('is_widget'):
 			now = time.time()
-			if now - Pref.timing > 0.06:
+			if now - Pref.timing > 0.08:
 				Pref.timing = now
 				self.highlight_occurences(view)
 			else:
