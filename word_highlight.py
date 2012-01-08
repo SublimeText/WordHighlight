@@ -134,15 +134,15 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			Pref.prev_regions = regions
 	
 	def find_regions(self, view, regions, string, limited_size):
+		search = '(?<![\\w])'+re.escape(string)+'\\b'
 		if not limited_size:
-			regions += view.find_all(r'(?<![\\w])'+re.escape(string)+'\\b')
+			regions += view.find_all(search)
 		else:
 			chars = Pref.when_file_size_limit_search_this_num_of_characters
 			visible_region = view.visible_region()
 			begin = 0 if visible_region.begin() - chars < 0 else visible_region.begin() - chars
 			end = visible_region.end() + chars
 			from_point = begin
-			search = r'(?<![\\w])'+re.escape(string)+'\\b'
 			while True:
 				region = view.find(search, from_point)
 				if region:
