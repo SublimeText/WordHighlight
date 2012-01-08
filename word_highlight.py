@@ -88,22 +88,27 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			limited_size = True
 
 		regions = []
+		processedWords = []
 		occurrencesMessage = []
 		occurrencesCount = 0
 		for sel in view.sel():
 			if Pref.highlight_when_selection_is_empty and sel.empty():
 				string = view.substr(view.word(sel)).strip()
-				if string and all([not c in Pref.word_separators for c in string]):
-					regions = self.find_regions(view, regions, string, limited_size)
-				if not Pref.highlight_word_under_cursor_when_selection_is_empty:
-					for s in view.sel():
-						regions = [r for r in regions if not r.contains(s)]
+				if string not in processedWords:
+					processedWords.append(string)
+					if string and all([not c in Pref.word_separators for c in string]):
+							regions = self.find_regions(view, regions, string, limited_size)
+					if not Pref.highlight_word_under_cursor_when_selection_is_empty:
+						for s in view.sel():
+							regions = [r for r in regions if not r.contains(s)]
 			elif not sel.empty():
 				word = view.word(sel)
 				if word.end() == sel.end() and word.begin() == sel.begin():
 					string = view.substr(word).strip()
-					if string and all([not c in Pref.word_separators for c in string]):
-						regions = self.find_regions(view, regions, string, limited_size)
+					if string not in processedWords:
+						processedWords.append(string)
+						if string and all([not c in Pref.word_separators for c in string]):
+								regions = self.find_regions(view, regions, string, limited_size)
 
 			occurrences = len(regions)-occurrencesCount;
 			if occurrences > 0:
