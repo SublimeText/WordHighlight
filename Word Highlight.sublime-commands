@@ -1,0 +1,6 @@
+[
+    {
+        "caption": "WordHighlight: Toggle Enabled",
+        "command": "set_word_highlight_enabled"
+    }
+]

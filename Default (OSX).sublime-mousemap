@@ -1,0 +1,20 @@
+[
+	// Drag select by words
+	{
+		"button": "button1", "count": 2,
+		"press_command": "drag_select",
+		"press_args": {"by": "words"},
+		"command": "word_highlight_click"
+	},
+	{
+		"button": "button1", "count": 2, "modifiers": ["super"],
+		"press_command": "drag_select",
+		"press_args": {"by": "words", "additive": true},
+		"command": "word_highlight_click"
+	},
+	{
+		"button": "button1", "count": 1,
+		"press_command": "drag_select",
+		"command": "word_highlight_click"
+	}
+]
