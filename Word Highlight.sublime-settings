@@ -1,8 +1,12 @@
 {
+	"color_scope_name": "comment",
 	"draw_outlined": true,
-	"selection_delay": 0.04,
+
+	"highlight_delay": 0,
 	"highlight_when_selection_is_empty": false,
 	"highlight_word_under_cursor_when_selection_is_empty": false,
-	"file_size_limit": 4194304
+
+	"file_size_limit": 4194304,
+	"when_file_size_limit_search_this_num_of_characters": 20000
 }
 
