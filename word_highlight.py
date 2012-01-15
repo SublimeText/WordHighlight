@@ -16,10 +16,11 @@ class Pref:
 		Pref.word_separators                                    	= settings_base.get('word_separators')
 		Pref.file_size_limit                                    	= int(settings.get('file_size_limit', 4194304))
 		Pref.when_file_size_limit_search_this_num_of_characters		= int(settings.get('when_file_size_limit_search_this_num_of_characters', 20000))
+		Pref.find_for_words_when_selecting												= bool(settings.get('find_for_words_when_selecting', False))
 		Pref.timing                                             	= time.time()
 		Pref.enabled                                             	= True
-		Pref.prev_selections 																			= None
-		Pref.prev_regions 																				= None
+		Pref.prev_selections																			= None
+		Pref.prev_regions																					= None
 
 Pref().load()
 
@@ -30,6 +31,7 @@ settings.add_on_change('highlight_when_selection_is_empty',                  	la
 settings.add_on_change('highlight_word_under_cursor_when_selection_is_empty',	lambda:Pref().load())
 settings.add_on_change('file_size_limit',                                    	lambda:Pref().load())
 settings.add_on_change('when_file_size_limit_search_this_num_of_characters',	lambda:Pref().load())
+settings.add_on_change('find_for_words_when_selecting',												lambda:Pref().load())
 settings_base.add_on_change('word_separators',                               	lambda:Pref().load())
 
 
@@ -69,7 +71,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				view.erase_regions("WordHighlight")
 
 	def on_selection_modified(self, view):
-		if Pref.enabled and not view.settings().get('is_widget'):
+		if Pref.enabled and Pref.find_for_words_when_selecting and not view.settings().get('is_widget'):
 			now = time.time()
 			if now - Pref.timing > 0.08:
 				Pref.timing = now
