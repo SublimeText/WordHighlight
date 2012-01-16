@@ -7,6 +7,8 @@
 	"highlight_word_under_cursor_when_selection_is_empty": false,
 
 	"file_size_limit": 4194304,
-	"when_file_size_limit_search_this_num_of_characters": 20000
+	"when_file_size_limit_search_this_num_of_characters": 20000,
+	
+	"find_for_words_when_selecting": false
 }
 
