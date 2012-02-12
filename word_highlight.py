@@ -15,11 +15,11 @@ class Pref:
 		Pref.highlight_word_under_cursor_when_selection_is_empty	= bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
 		Pref.word_separators                                    	= settings_base.get('word_separators')
 		Pref.file_size_limit                                    	= int(settings.get('file_size_limit', 4194304))
-		Pref.when_file_size_limit_search_this_num_of_characters		= int(settings.get('when_file_size_limit_search_this_num_of_characters', 20000))
+		Pref.when_file_size_limit_search_this_num_of_characters 	= int(settings.get('when_file_size_limit_search_this_num_of_characters', 20000))
 		Pref.timing                                             	= time.time()
-		Pref.enabled                                             	= True
-		Pref.prev_selections 																			= None
-		Pref.prev_regions 																				= None
+		Pref.enabled                                            	= True
+		Pref.prev_selections                                    	= None
+		Pref.prev_regions                                       	= None
 
 Pref().load()
 
@@ -29,7 +29,7 @@ settings.add_on_change('draw_outlined',                                      	la
 settings.add_on_change('highlight_when_selection_is_empty',                  	lambda:Pref().load())
 settings.add_on_change('highlight_word_under_cursor_when_selection_is_empty',	lambda:Pref().load())
 settings.add_on_change('file_size_limit',                                    	lambda:Pref().load())
-settings.add_on_change('when_file_size_limit_search_this_num_of_characters',	lambda:Pref().load())
+settings.add_on_change('when_file_size_limit_search_this_num_of_characters', 	lambda:Pref().load())
 settings_base.add_on_change('word_separators',                               	lambda:Pref().load())
 
 
