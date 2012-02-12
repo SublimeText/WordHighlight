@@ -1,5 +1,6 @@
 {
 	"color_scope_name": "comment",
+	"case_sensitive": true,
 	"draw_outlined": true,
 
 	"highlight_delay": 0,

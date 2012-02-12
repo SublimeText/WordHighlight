@@ -10,6 +10,7 @@ class Pref:
 	def load(self):
 		Pref.color_scope_name                                   	= settings.get('color_scope_name', "comment")
 		Pref.highlight_delay                                    	= settings.get('highlight_delay', 0)
+		Pref.case_sensitive                                     	= (not bool(settings.get('case_sensitive', True))) * sublime.IGNORECASE
 		Pref.draw_outlined                                      	= bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
 		Pref.highlight_when_selection_is_empty                  	= bool(settings.get('highlight_when_selection_is_empty', False))
 		Pref.highlight_word_under_cursor_when_selection_is_empty	= bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
@@ -25,6 +26,7 @@ Pref().load()
 
 settings.add_on_change('color_scope_name',                                   	lambda:Pref().load())
 settings.add_on_change('highlight_delay',                                    	lambda:Pref().load())
+settings.add_on_change('case_sensitive',                                     	lambda:Pref().load())
 settings.add_on_change('draw_outlined',                                      	lambda:Pref().load())
 settings.add_on_change('highlight_when_selection_is_empty',                  	lambda:Pref().load())
 settings.add_on_change('highlight_word_under_cursor_when_selection_is_empty',	lambda:Pref().load())
@@ -139,7 +141,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 	def find_regions(self, view, regions, string, limited_size):
 		search = '(?<![\\w])'+re.escape(string)+'\\b'
 		if not limited_size:
-			regions += view.find_all(search)
+			regions += view.find_all(search, Pref.case_sensitive)
 		else:
 			chars = Pref.when_file_size_limit_search_this_num_of_characters
 			visible_region = view.visible_region()
