@@ -4,7 +4,10 @@ import re
 import time
 
 settings = sublime.load_settings('Word Highlight.sublime-settings')
-settings_base = sublime.load_settings('Base File.sublime-settings')
+if int(sublime.version()) >= 2174:
+	settings_base = sublime.load_settings('Preferences.sublime-settings')
+else:
+	settings_base = sublime.load_settings('Base File.sublime-settings')
 
 class Pref:
 	def load(self):
@@ -42,7 +45,7 @@ class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
 			sublime.active_window().active_view().erase_regions("WordHighlight")
 		else:
 			WordHighlightListener().highlight_occurences(sublime.active_window().active_view())
-				
+
 	def description(self):
 		return 'Disable' if Pref.enabled else 'Enable'
 
@@ -96,7 +99,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			limited_size = False
 		else:
 			limited_size = True
-		
+
 		# print 'running'+ str(time.time())
 
 		regions = []
@@ -137,7 +140,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			else:
 				view.erase_status("WordHighlight")
 			Pref.prev_regions = regions
-	
+
 	def find_regions(self, view, regions, string, limited_size):
 		search = '(?<![\\w])'+re.escape(string)+'\\b'
 		if not limited_size:
