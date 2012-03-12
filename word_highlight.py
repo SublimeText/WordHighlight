@@ -45,7 +45,7 @@ class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
 			sublime.active_window().active_view().erase_regions("WordHighlight")
 		else:
 			WordHighlightListener().highlight_occurences(sublime.active_window().active_view())
-				
+
 	def description(self):
 		return 'Disable' if Pref.enabled else 'Enable'
 
@@ -78,7 +78,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			now = time.time()
 			if now - Pref.timing > 0.08:
 				Pref.timing = now
-				self.highlight_occurences(view)
+				sublime.set_timeout(lambda:self.highlight_occurences(view), 0)
 			else:
 				Pref.timing = now
 
@@ -99,7 +99,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			limited_size = False
 		else:
 			limited_size = True
-		
+
 		# print 'running'+ str(time.time())
 
 		regions = []
@@ -140,7 +140,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			else:
 				view.erase_status("WordHighlight")
 			Pref.prev_regions = regions
-	
+
 	def find_regions(self, view, regions, string, limited_size):
 		search = '(?<![\\w])'+re.escape(string)+'\\b'
 		if not limited_size:
