@@ -78,7 +78,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			now = time.time()
 			if now - Pref.timing > 0.08:
 				Pref.timing = now
-				self.highlight_occurences(view)
+				sublime.set_timeout(lambda:self.highlight_occurences(view), 0)
 			else:
 				Pref.timing = now
 
