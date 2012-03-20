@@ -25,17 +25,11 @@ class Pref:
 		Pref.prev_selections                                    	= None
 		Pref.prev_regions                                       	= None
 
-Pref().load()
+Pref = Pref()
+Pref.load()
 
-settings.add_on_change('color_scope_name',                                   	lambda:Pref().load())
-settings.add_on_change('highlight_delay',                                    	lambda:Pref().load())
-settings.add_on_change('case_sensitive',                                     	lambda:Pref().load())
-settings.add_on_change('draw_outlined',                                      	lambda:Pref().load())
-settings.add_on_change('highlight_when_selection_is_empty',                  	lambda:Pref().load())
-settings.add_on_change('highlight_word_under_cursor_when_selection_is_empty',	lambda:Pref().load())
-settings.add_on_change('file_size_limit',                                    	lambda:Pref().load())
-settings.add_on_change('when_file_size_limit_search_this_num_of_characters', 	lambda:Pref().load())
-settings_base.add_on_change('word_separators',                               	lambda:Pref().load())
+settings.add_on_change('reload', lambda:Pref.load())
+settings_base.add_on_change('wordhighlight-reload', lambda:Pref.load())
 
 
 class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
@@ -45,7 +39,7 @@ class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
 			sublime.active_window().active_view().erase_regions("WordHighlight")
 		else:
 			WordHighlightListener().highlight_occurences(sublime.active_window().active_view())
-				
+
 	def description(self):
 		return 'Disable' if Pref.enabled else 'Enable'
 
@@ -99,7 +93,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			limited_size = False
 		else:
 			limited_size = True
-		
+
 		# print 'running'+ str(time.time())
 
 		regions = []
@@ -140,7 +134,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			else:
 				view.erase_status("WordHighlight")
 			Pref.prev_regions = regions
-	
+
 	def find_regions(self, view, regions, string, limited_size):
 		search = '(?<![\\w])'+re.escape(string)+'\\b'
 		if not limited_size:
