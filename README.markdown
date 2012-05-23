@@ -39,7 +39,7 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 	
 	When the previous option is enabled, this makes the word under the cursor to gain highlighting
 
-*	`"selection_delay" : 0`
+*	`"highlight_delay" : 0`
 	
 	This delays highlighting all occurrences using given time (in miliseconds) to let users move cursor 
 	around without being distracted with immediate highlights. Default value 0 means almost no delay.
