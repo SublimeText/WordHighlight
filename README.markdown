@@ -29,6 +29,16 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 	
 	This makes the highlights be drawn as outlines instead of as filled
 	highlights.
+*	`"marking_occurrences_on_gutter" : true`
+
+	If this comes true, icons will be used to mark all occurrences of selected words on the gutter bar.
+	To customize the icons, the property "icon_type_on_gutter" is helpful.
+	
+*	`"icon_type_on_gutter" : dot`
+	
+	Normally, there are 4 valid types: dot, circle, bookmark and cross. If you want more, please
+	have a look at folder "Theme - Default" under the "Packages" of Sublime Text (this can be done
+    via menu "Preferences > Browse Packages").
 
 *	`"highlight_when_selection_is_empty" : true`
 	
