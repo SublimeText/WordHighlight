@@ -34,6 +34,14 @@ settings.add_on_change('reload', lambda:Pref.load())
 settings_base.add_on_change('wordhighlight-reload', lambda:Pref.load())
 
 
+def escape_regex(str):
+	# Sublime text chokes when regexes contain \', \<, \>, or \`.
+	# Call re.escape to escape everything, and then unescape these four.
+	str = re.escape(str)
+	for c in "'<>`":
+		str = str.replace('\\' + c, c)
+	return str
+
 class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
 	def run(self):
 		Pref.enabled = not Pref.enabled
@@ -61,7 +69,6 @@ class WordHighlightClickCommand(sublime_plugin.TextCommand):
 
 
 class WordHighlightListener(sublime_plugin.EventListener):
-
 	def on_activated(self, view):
 		Pref.prev_selections = None
 		if not view.is_loading():
@@ -138,7 +145,9 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			Pref.prev_regions = regions
 
 	def find_regions(self, view, regions, string, limited_size):
-		search = '(?<![\\w])'+re.escape(string)+'\\b'
+		# It seems as if \b doesn't pay attention to word_separators, but
+		# \w does. Hence we use lookaround assertions instead of \b.
+		search = r'(?<!\w)'+escape_regex(string)+r'(?!\w)'
 		if not limited_size:
 			regions += view.find_all(search, Pref.case_sensitive)
 		else:
