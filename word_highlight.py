@@ -1,37 +1,48 @@
-import sublime
-import sublime_plugin
 import re
+import sys
 import time
 
-settings = sublime.load_settings('Word Highlight.sublime-settings')
-if int(sublime.version()) >= 2174:
-    settings_base = sublime.load_settings('Preferences.sublime-settings')
-else:
-    settings_base = sublime.load_settings('Base File.sublime-settings')
+import sublime
+import sublime_plugin
 
-class Pref:
-    def load(self):
-        Pref.color_scope_name                                    = settings.get('color_scope_name', "comment")
-        Pref.highlight_delay                                     = settings.get('highlight_delay', 0)
-        Pref.case_sensitive                                      = (not bool(settings.get('case_sensitive', True))) * sublime.IGNORECASE
-        Pref.draw_outlined                                       = bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
-        Pref.mark_occurrences_on_gutter                          = bool(settings.get('mark_occurrences_on_gutter', False))
-        Pref.icon_type_on_gutter                                 = settings.get("icon_type_on_gutter", "dot")
-        Pref.highlight_when_selection_is_empty                   = bool(settings.get('highlight_when_selection_is_empty', False))
-        Pref.highlight_word_under_cursor_when_selection_is_empty = bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
-        Pref.word_separators                                     = settings_base.get('word_separators')
-        Pref.file_size_limit                                     = int(settings.get('file_size_limit', 4194304))
-        Pref.when_file_size_limit_search_this_num_of_characters  = int(settings.get('when_file_size_limit_search_this_num_of_characters', 20000))
-        Pref.timing                                              = time.time()
-        Pref.enabled                                             = True
-        Pref.prev_selections                                     = None
-        Pref.prev_regions                                        = None
 
-Pref = Pref()
-Pref.load()
+def plugin_loaded():
+    settings = sublime.load_settings('Word Highlight.sublime-settings')
+    if int(sublime.version()) >= 2174:
+        settings_base = sublime.load_settings('Preferences.sublime-settings')
+    else:
+        settings_base = sublime.load_settings('Base File.sublime-settings')
 
-settings.add_on_change('reload', lambda:Pref.load())
-settings_base.add_on_change('wordhighlight-reload', lambda:Pref.load())
+    global Pref
+
+    class Pref:
+        def load(self):
+            Pref.color_scope_name                                    = settings.get('color_scope_name', "comment")
+            Pref.highlight_delay                                     = settings.get('highlight_delay', 0)
+            Pref.case_sensitive                                      = (not bool(settings.get('case_sensitive', True))) * sublime.IGNORECASE
+            Pref.draw_outlined                                       = bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
+            Pref.mark_occurrences_on_gutter                          = bool(settings.get('mark_occurrences_on_gutter', False))
+            Pref.icon_type_on_gutter                                 = settings.get("icon_type_on_gutter", "dot")
+            Pref.highlight_when_selection_is_empty                   = bool(settings.get('highlight_when_selection_is_empty', False))
+            Pref.highlight_word_under_cursor_when_selection_is_empty = bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
+            Pref.word_separators                                     = settings_base.get('word_separators')
+            Pref.file_size_limit                                     = int(settings.get('file_size_limit', 4194304))
+            Pref.when_file_size_limit_search_this_num_of_characters  = int(settings.get('when_file_size_limit_search_this_num_of_characters', 20000))
+            Pref.timing                                              = time.time()
+            Pref.enabled                                             = True
+            Pref.prev_selections                                     = None
+            Pref.prev_regions                                        = None
+
+    Pref = Pref()
+    Pref.load()
+
+    settings.add_on_change('reload', lambda:Pref.load())
+    settings_base.add_on_change('wordhighlight-reload', lambda:Pref.load())
+
+
+# Backwards compatibility with Sublime 2.  sublime.version isn't available at module import time in Sublime 3.
+if sys.version_info[0] == 2:
+    plugin_loaded()
 
 
 def escape_regex(str):
@@ -41,6 +52,7 @@ def escape_regex(str):
     for c in "'<>`":
         str = str.replace('\\' + c, c)
     return str
+
 
 class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
     def run(self):
@@ -92,7 +104,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
             Pref.prev_regions = None
             Pref.prev_selections = None
             return
-        prev_selections = str(view.sel())
+        # todo: The list cast below can go away when Sublime 3's Selection class implements __str__
+        prev_selections = str(list(view.sel()))
         if Pref.prev_selections == prev_selections:
             return
         else:
@@ -102,8 +115,6 @@ class WordHighlightListener(sublime_plugin.EventListener):
             limited_size = False
         else:
             limited_size = True
-
-        # print 'running'+ str(time.time())
 
         regions = []
         processedWords = []
