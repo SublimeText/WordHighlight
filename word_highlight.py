@@ -7,13 +7,14 @@ import sublime_plugin
 
 
 def plugin_loaded():
+	global settings_base
+	global Pref
+
 	settings = sublime.load_settings('Word Highlight.sublime-settings')
 	if int(sublime.version()) >= 2174:
 		settings_base = sublime.load_settings('Preferences.sublime-settings')
 	else:
 		settings_base = sublime.load_settings('Base File.sublime-settings')
-
-	global Pref
 
 	class Pref:
 		def load(self):
