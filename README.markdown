@@ -54,13 +54,18 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 	This delays highlighting all occurrences using given time (in miliseconds) to let users move cursor
 	around without being distracted with immediate highlights. Default value 0 means almost no delay.
 
+*	`"show_word_highlight_status_bar_message" : true`
+
+	This lets you toggle if you want a status bar message to show how many occurences of the highlighted word there are.
+	If you mix this with `"highlight_word_under_cursor_when_selection_is_empty": false` the occurence number will not count word your cursor is on.
+
 *	`"color_scope_name" : "wordhighlight"`
 
 	Normally the color of the highlights is the same as the color of comments in
 	your code. If you'd like to customize the color, add the below to your color
 	scheme file and change EDF2E9 to whatever color you want, then change
 	color_scope_name to the scope name in the block you added. If you'd like to
-	specify a background color, uncomment the background part in the example below 
+	specify a background color, uncomment the background part in the example below
 	and set "draw_outlined" to "false").
 
 			<dict>
@@ -72,7 +77,7 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 				<dict>
 					<key>foreground</key>
 					<string>#EDF2E9</string>
-					
+
 					<!--
 					<key>background</key>
 					<string>#16DD00</string>
