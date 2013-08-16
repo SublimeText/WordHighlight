@@ -7,7 +7,11 @@ optionally, highlights all copies of a word which currently has the insertion cu
 Install
 -------
 
-Go to your Packages subdirectory under ST2's data directory:
+The easiest method to install would be using [Package Control](https://sublime.wbond.net/installation). 
+Ensure you have the latest by visiting that link, then open the command palette, type in 
+"Install Package", and search for "WordHighLight".
+
+Alternatively, to manually install go to your Packages subdirectory under ST2's data directory:
 
 * Windows: %APPDATA%\Sublime Text 2
 * OS X: ~/Library/Application Support/Sublime Text 2
