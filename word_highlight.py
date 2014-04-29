@@ -2,9 +2,13 @@ import re
 import sys
 import time
 
+try:
+	import thread
+except:
+	import _thread as thread
+
 import sublime
 import sublime_plugin
-
 
 def plugin_loaded():
 	global settings_base
@@ -40,6 +44,10 @@ def plugin_loaded():
 
 	settings.add_on_change('reload', lambda:Pref.load())
 	settings_base.add_on_change('wordhighlight-reload', lambda:Pref.load())
+	if not 'running_wh_loop' in globals():
+		global running_wh_loop
+		running_wh_loop = True
+		thread.start_new_thread(wh_loop, ())
 
 
 # Backwards compatibility with Sublime 2.  sublime.version isn't available at module import time in Sublime 3.
@@ -55,6 +63,10 @@ def escape_regex(str):
 		str = str.replace('\\' + c, c)
 	return str
 
+def wh_loop():
+	while True:
+		sublime.set_timeout(lambda:WordHighlightListener().on_selection_modified(sublime.active_window().active_view()), 0)
+		time.sleep(0.3)
 
 class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
 	def run(self):
