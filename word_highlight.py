@@ -49,6 +49,10 @@ def plugin_loaded():
 		running_wh_loop = True
 		thread.start_new_thread(wh_loop, ())
 
+def wh_loop():
+	while True:
+		sublime.set_timeout(lambda:WordHighlightListener().on_selection_modified(sublime.active_window().active_view() if sublime.active_window() else None), 0)
+		time.sleep(0.3)
 
 # Backwards compatibility with Sublime 2.  sublime.version isn't available at module import time in Sublime 3.
 if sys.version_info[0] == 2:
@@ -62,11 +66,6 @@ def escape_regex(str):
 	for c in "'<>`":
 		str = str.replace('\\' + c, c)
 	return str
-
-def wh_loop():
-	while True:
-		sublime.set_timeout(lambda:WordHighlightListener().on_selection_modified(sublime.active_window().active_view()), 0)
-		time.sleep(0.3)
 
 class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
 	def run(self):
@@ -103,7 +102,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				view.erase_regions("WordHighlight")
 
 	def on_selection_modified(self, view):
-		if Pref.enabled and not view.settings().get('is_widget'):
+		if view and Pref.enabled and not view.settings().get('is_widget'):
 			now = time.time()
 			if now - Pref.timing > 0.08:
 				Pref.timing = now
