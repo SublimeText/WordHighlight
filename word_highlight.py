@@ -10,6 +10,9 @@ except:
 import sublime
 import sublime_plugin
 
+Pref = {}
+settings_base = {}
+
 def plugin_loaded():
 	global settings_base
 	global Pref
@@ -38,6 +41,7 @@ def plugin_loaded():
 			Pref.enabled                                             = True
 			Pref.prev_selections                                     = None
 			Pref.prev_regions                                        = None
+			Pref.select_next_word_skiped                             = 0
 
 	Pref = Pref()
 	Pref.load()
@@ -85,9 +89,31 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 		for w in wh:
 			self.view.sel().add(w)
 
+class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
+	def run(self, edit):
+		sel = [s for s in self.view.sel()]
+		sel.reverse()
+		if sel:
+			word = sel[0]
+			wh = self.view.get_regions("WordHighlight")
+			for w in wh:
+				if w.end() > word.end() and w.end() > Pref.select_next_word_skiped:
+					self.view.sel().add(w)
+					self.view.show(w)
+					Pref.select_next_word_skiped = w.end()
+					break;
+
+class SelectHighlightedSkipLastWordCommand(sublime_plugin.TextCommand):
+	def run(self, edit):
+		sel = [s for s in self.view.sel()]
+		sel.reverse()
+		if sel and len(sel) > 1:
+			self.view.sel().subtract(sel[0])
+			Pref.select_next_word_skiped = sel[0].end()
 
 class WordHighlightClickCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
+		Pref.select_next_word_skiped = 0
 		view = self.view
 		if Pref.enabled and not view.settings().get('is_widget'):
 			WordHighlightListener().highlight_occurences(view)
@@ -96,6 +122,7 @@ class WordHighlightClickCommand(sublime_plugin.TextCommand):
 class WordHighlightListener(sublime_plugin.EventListener):
 	def on_activated(self, view):
 		Pref.prev_selections = None
+		Pref.select_next_word_skiped = 0
 		if not view.is_loading():
 			Pref.word_separators = view.settings().get('word_separators') or settings_base.get('word_separators')
 			if not Pref.enabled:
