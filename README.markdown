@@ -99,3 +99,22 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 
 	When a file is bigger than the previous setting. This controls how many characters below and above the  view port you want to search for words to highlight
 
+Selections
+-------
+
+By default it provides the key `ALT+ENTER` to select all the words highlighted by this package (you may highlight multiple words and then select all the instances)
+
+It also has two functions with no keymap defined, to mimic `CTRL+D` and `CTRL+K, CTRL+D`. You may decided to use the alternatives by adding (upon customization) the following to the keymap file (`Packages/User/Default (Windows).sublime-keymap`):
+
+```
+	{ "keys": ["ctrl+enter"], "command": "select_highlighted_next_word", "context":
+		[	{ "key": "selection_empty", "operator": "equal", "operand": false },
+			{ "key": "setting.is_widget", "operator": "equal", "operand": false }
+		]
+	},
+	{ "keys": ["ctrl+backspace"], "command": "select_highlighted_skip_last_word", "context":
+		[	{ "key": "selection_empty", "operator": "equal", "operand": false },
+			{ "key": "setting.is_widget", "operator": "equal", "operand": false }
+		]
+	},
+```
