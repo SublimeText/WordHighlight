@@ -4,19 +4,21 @@ What it does
 This plugin highlights all copies of a word that's currently selected, or,
 optionally, highlights all copies of a word which currently has the insertion cursor upon it.
 
+Additionally you may select all these words highlighted with `ALT+ENTER`, or also may append to the selection these words one by one similar to CTRL+D.
+
 Install
 -------
 
-The easiest method to install would be using [Package Control](https://sublime.wbond.net/installation). 
-Ensure you have the latest by visiting that link, then open the command palette, type in 
+The easiest method to install would be using [Package Control](https://sublime.wbond.net/installation).
+Ensure you have the latest by visiting that link, then open the command palette, type in
 "Install Package", and search for "WordHighLight".
 
-Alternatively, to manually install go to your Packages subdirectory under ST2's data directory:
+Alternatively, to manually install go to your Packages subdirectory under ST's data directory, where `X` is the ST version:
 
-* Windows: %APPDATA%\Sublime Text 2
-* OS X: ~/Library/Application Support/Sublime Text 2
-* Linux: ~/.config/sublime-text-2
-* Portable Installation: Sublime Text 2/Data
+* Windows: %APPDATA%\Sublime Text X
+* OS X: ~/Library/Application Support/Sublime Text X
+* Linux: ~/.config/sublime-text-X
+* Portable Installation: Sublime Text X/Data
 
 Then clone this repository:
 
@@ -55,13 +57,13 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 
 *	`"highlight_delay" : 0`
 
-	This delays highlighting all occurrences using given time (in miliseconds) to let users move cursor
+	This delays highlighting all occurrences using given time (in milliseconds) to let users move cursor
 	around without being distracted with immediate highlights. Default value 0 means almost no delay.
 
 *	`"show_word_highlight_status_bar_message" : true`
 
-	This lets you toggle if you want a status bar message to show how many occurences of the highlighted word there are.
-	If you mix this with `"highlight_word_under_cursor_when_selection_is_empty": false` the occurence number will not count word your cursor is on.
+	This lets you toggle if you want a status bar message to show how many occurrences of the highlighted word there are.
+	If you mix this with `"highlight_word_under_cursor_when_selection_is_empty": false` the occurrence number will not count word your cursor is on.
 
 *	`"color_scope_name" : "wordhighlight"`
 
