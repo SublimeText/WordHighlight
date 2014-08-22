@@ -187,7 +187,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
 			occurrences = len(regions)-occurrencesCount;
 			if occurrences > 0:
-				occurrencesMessage.append(str(occurrences) + ' occurrence' + ('s' if occurrences != 1 else '') + ' of "' + string + '"')
+				occurrencesMessage.append('"' + string + '" '+str(occurrences) +' ')
 				occurrencesCount = occurrencesCount + occurrences
 		if Pref.prev_regions != regions:
 			view.erase_regions("WordHighlight")
