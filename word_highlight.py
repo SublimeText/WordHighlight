@@ -33,6 +33,7 @@ def plugin_loaded():
 			Pref.icon_type_on_gutter                                 = settings.get("icon_type_on_gutter", "dot")
 			Pref.highlight_when_selection_is_empty                   = bool(settings.get('highlight_when_selection_is_empty', False))
 			Pref.highlight_word_under_cursor_when_selection_is_empty = bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
+			Pref.highlight_non_word_characters                       = bool(settings.get('highlight_non_word_characters', False))
 			Pref.word_separators                                     = settings_base.get('word_separators')
 			Pref.show_status_bar_message                             = bool(settings.get('show_word_highlight_status_bar_message', True))
 			Pref.file_size_limit                                     = int(settings.get('file_size_limit', 4194304))
@@ -176,6 +177,11 @@ class WordHighlightListener(sublime_plugin.EventListener):
 					if not Pref.highlight_word_under_cursor_when_selection_is_empty:
 						for s in view.sel():
 							regions = [r for r in regions if not r.contains(s)]
+			elif not sel.empty() and Pref.highlight_non_word_characters:
+				string = view.substr(sel)
+				if string and string not in processedWords:
+					processedWords.append(string)
+					regions = self.find_regions(view, regions, string, limited_size)
 			elif not sel.empty():
 				word = view.word(sel)
 				if word.end() == sel.end() and word.begin() == sel.begin():
