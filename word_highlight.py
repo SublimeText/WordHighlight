@@ -210,7 +210,11 @@ class WordHighlightListener(sublime_plugin.EventListener):
 	def find_regions(self, view, regions, string, limited_size):
 		# It seems as if \b doesn't pay attention to word_separators, but
 		# \w does. Hence we use lookaround assertions instead of \b.
-		search = r'(?<!\w)'+escape_regex(string)+r'(?!\w)'
+		if Pref.highlight_non_word_characters:
+			search = escape_regex(string)
+		else:
+			search = r'(?<!\w)'+escape_regex(string)+r'(?!\w)'
+
 		if not limited_size:
 			regions += view.find_all(search, Pref.case_sensitive)
 		else:
