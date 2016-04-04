@@ -69,7 +69,7 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 
 	Normally the color of the highlights is the same as the color of comments in
 	your code. If you'd like to customize the color, add the below to your color
-	scheme file and change EDF2E9 to whatever color you want, then change
+	scheme .tmTheme file and change EDF2E9 to whatever color you want, then change
 	color_scope_name to the scope name in the block you added. If you'd like to
 	specify a background color, uncomment the background part in the example below
 	and set "draw_outlined" to "false").
@@ -83,13 +83,17 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 				<dict>
 					<key>foreground</key>
 					<string>#EDF2E9</string>
-
+					
 					<!--
 					<key>background</key>
 					<string>#16DD00</string>
 					-->
 				</dict>
 			</dict>
+
+	Note that some other plugins such as Color Hightlighter and SublimeLinter make copies
+	of your tmTheme and add their own modifications, and if you are using a plugin that
+	does this, your change to the .tmTheme file may not be reflected in the UI immediately.
 
 * `"file_size_limit" : 4194304`
 
