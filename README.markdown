@@ -90,6 +90,10 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 					-->
 				</dict>
 			</dict>
+			
+	Note that some other plugins such as Color Hightlighter and SublimeLinter make copies
+	of your tmTheme and add their own modifications, and if you are using a plugin that 
+	does this, your change to the .tmTheme file may not be reflected in the UI immediately.
 
 	Note that some other plugins such as Color Hightlighter and SublimeLinter make copies
 	of your tmTheme and add their own modifications, and if you are using a plugin that
