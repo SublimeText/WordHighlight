@@ -4,7 +4,7 @@ What it does
 This plugin highlights all copies of a word that's currently selected, or,
 optionally, highlights all copies of a word which currently has the insertion cursor upon it.
 
-Additionally you may select all these words highlighted with `ALT+ENTER`, or also may append to the selection these words one by one similar to CTRL+D.
+Additionally you may select all these words highlighted with <kbd>ALT</kbd>+<kbd>ENTER</kbd>, or also may append to the selection these words one by one similar to <kbd>CTRL</kbd>+<kbd>D</kbd>.
 
 Install
 -------
@@ -69,31 +69,31 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 
 	Normally the color of the highlights is the same as the color of comments in
 	your code. If you'd like to customize the color, add the below to your color
-	scheme .tmTheme file and change EDF2E9 to whatever color you want, then change
+	scheme `.tmTheme` file and change EDF2E9 to whatever color you want, then change
 	color_scope_name to the scope name in the block you added. If you'd like to
 	specify a background color, uncomment the background part in the example below
 	and set "draw_outlined" to "false").
-
-			<dict>
-				<key>name</key>
-				<string>WordHighlight</string>
-				<key>scope</key>
-				<string>wordhighlight</string>
-				<key>settings</key>
-				<dict>
-					<key>foreground</key>
-					<string>#EDF2E9</string>
-					
-					<!--
-					<key>background</key>
-					<string>#16DD00</string>
-					-->
-				</dict>
-			</dict>
-
+	```xml
+	<dict>
+		<key>name</key>
+		<string>WordHighlight</string>
+		<key>scope</key>
+		<string>wordhighlight</string>
+		<key>settings</key>
+		<dict>
+			<key>foreground</key>
+			<string>#EDF2E9</string>
+			
+			<!--
+			<key>background</key>
+			<string>#16DD00</string>
+			-->
+		</dict>
+	</dict>
+	```
 	Note that some other plugins such as Color Hightlighter and SublimeLinter make copies
 	of your tmTheme and add their own modifications, and if you are using a plugin that
-	does this, your change to the .tmTheme file may not be reflected in the UI immediately.
+	does this, your change to the `.tmTheme` file may not be reflected in the UI immediately.
 
 * `"file_size_limit" : 4194304`
 
@@ -106,19 +106,19 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 Selections
 -------
 
-By default it provides the key `ALT+ENTER` to select all the words highlighted by this package (you may highlight multiple words and then select all the instances)
+By default it provides the key <kbd>ALT</kbd>+<kbd>ENTER</kbd> to select all the words highlighted by this package (you may highlight multiple words and then select all the instances)
 
-It also has two functions with no keymap defined, to mimic `CTRL+D` and `CTRL+K, CTRL+D`. You may decided to use the alternatives by adding (upon customization) the following to the keymap file (`Packages/User/Default (Windows).sublime-keymap`):
+It also has two functions with no keymap defined, to mimic <kbd>CTRL</kbd>+<kbd>D</kbd> and <kbd>CTRL</kbd>+<kbd>K</kbd>, <kbd>CTRL</kbd>+<kbd>D</kbd>. You may decided to use the alternatives by adding (upon customization) the following to the keymap file (`Packages/User/Default (Windows).sublime-keymap`):
 
-```
-	{ "keys": ["ctrl+enter"], "command": "select_highlighted_next_word", "context":
-		[	{ "key": "selection_empty", "operator": "equal", "operand": false },
-			{ "key": "setting.is_widget", "operator": "equal", "operand": false }
-		]
-	},
-	{ "keys": ["ctrl+backspace"], "command": "select_highlighted_skip_last_word", "context":
-		[	{ "key": "selection_empty", "operator": "equal", "operand": false },
-			{ "key": "setting.is_widget", "operator": "equal", "operand": false }
-		]
-	},
+```json
+{ "keys": ["ctrl+enter"], "command": "select_highlighted_next_word", "context":
+	[	{ "key": "selection_empty", "operator": "equal", "operand": false },
+		{ "key": "setting.is_widget", "operator": "equal", "operand": false }
+	]
+},
+{ "keys": ["ctrl+backspace"], "command": "select_highlighted_skip_last_word", "context":
+	[	{ "key": "selection_empty", "operator": "equal", "operand": false },
+		{ "key": "setting.is_widget", "operator": "equal", "operand": false }
+	]
+},
 ```
