@@ -49,7 +49,7 @@ def plugin_loaded():
 
 	settings.add_on_change('reload', lambda:Pref.load())
 	settings_base.add_on_change('wordhighlight-reload', lambda:Pref.load())
-	if not 'running_wh_loop' in globals():
+	if Pref.highlight_when_selection_is_empty and not 'running_wh_loop' in globals():
 		global running_wh_loop
 		running_wh_loop = True
 		thread.start_new_thread(wh_loop, ())
