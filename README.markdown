@@ -83,7 +83,7 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 		<dict>
 			<key>foreground</key>
 			<string>#EDF2E9</string>
-			
+
 			<!--
 			<key>background</key>
 			<string>#16DD00</string>
@@ -122,3 +122,10 @@ It also has two functions with no keymap defined, to mimic <kbd>CTRL</kbd>+<kbd>
 	]
 },
 ```
+
+
+License
+--------
+
+See the file [LICENSE](LICENSE)
+
