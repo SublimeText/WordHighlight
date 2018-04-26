@@ -199,7 +199,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			view.erase_regions("WordHighlight")
 			if regions:
 				if Pref.highlight_delay == 0:
-					view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.icon_type_on_gutter if Pref.mark_occurrences_on_gutter else "", Pref.draw_outlined)
+					view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.icon_type_on_gutter if Pref.mark_occurrences_on_gutter else "", sublime.DRAW_NO_FILL if Pref.draw_outlined else 0)
 					self.set_status(view, ", ".join(list(set(occurrencesMessage))) + (' found on a limited portion of the document ' if limited_size else ''))
 				else:
 					sublime.set_timeout(lambda:self.delayed_highlight(view, regions, occurrencesMessage, limited_size), Pref.highlight_delay)
@@ -237,5 +237,5 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
 	def delayed_highlight(self, view, regions, occurrencesMessage, limited_size):
 		if regions == Pref.prev_regions:
-			view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.icon_type_on_gutter if Pref.mark_occurrences_on_gutter else "", Pref.draw_outlined)
+			view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.icon_type_on_gutter if Pref.mark_occurrences_on_gutter else "", sublime.DRAW_NO_FILL if Pref.draw_outlined else 0)
 			self.set_status(view, ", ".join(list(set(occurrencesMessage))) + (' found on a limited portion of the document ' if limited_size else ''))
