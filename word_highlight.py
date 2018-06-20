@@ -130,6 +130,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				view.erase_regions("WordHighlight")
 
 	def on_selection_modified(self, view):
+		view = sublime.active_window().active_view()
 		if view and Pref.enabled and not view.settings().get('is_widget'):
 			now = time.time()
 			if now - Pref.timing > 0.08:
@@ -143,6 +144,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			view.set_status("WordHighlight", message)
 
 	def highlight_occurences(self, view):
+		# print( "view.has_non_empty_selection_region:", view.has_non_empty_selection_region() )
 		if not Pref.highlight_when_selection_is_empty and not view.has_non_empty_selection_region():
 			view.erase_status("WordHighlight")
 			view.erase_regions("WordHighlight")
@@ -151,6 +153,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			return
 		# todo: The list cast below can go away when Sublime 3's Selection class implements __str__
 		prev_selections = str(list(view.sel()))
+		# print( "prev_selections:", prev_selections )
 		if Pref.prev_selections == prev_selections:
 			return
 		else:
@@ -161,7 +164,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		else:
 			limited_size = True
 
-		# print 'running'+ str(time.time())
+		# print( 'running'+ str(time.time()) )
 
 		regions = []
 		processedWords = []
