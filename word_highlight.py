@@ -130,12 +130,26 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				view.erase_regions("WordHighlight")
 
 	def on_selection_modified(self, view):
-		view = sublime.active_window().active_view()
-		if view and Pref.enabled and not view.settings().get('is_widget'):
+		active_window = sublime.active_window()
+		panel_has_focus = not view.file_name()
+
+		is_widget = view.settings().get('is_widget')
+		active_panel = active_window.active_panel()
+
+		# print( "is_widget:", is_widget )
+		# print( "panel_has_focus:", panel_has_focus )
+		if active_panel and panel_has_focus or is_widget:
+			correct_view = view
+
+		else:
+			correct_view = active_window.active_view()
+
+		# print( "correct_view:", correct_view )
+		if correct_view and Pref.enabled and not is_widget:
 			now = time.time()
 			if now - Pref.timing > 0.08:
 				Pref.timing = now
-				sublime.set_timeout(lambda:self.highlight_occurences(view), 0)
+				sublime.set_timeout(lambda:self.highlight_occurences(correct_view), 0)
 			else:
 				Pref.timing = now
 
