@@ -11,17 +11,23 @@ import sublime
 import sublime_plugin
 
 Pref = {}
+settings = {}
 settings_base = {}
 
-def plugin_loaded():
+def load_settings():
+	global settings
 	global settings_base
-	global Pref
+	settings = sublime.load_settings('HighlightWordsOnSelection.sublime-settings')
 
-	settings = sublime.load_settings('Word Highlight.sublime-settings')
 	if int(sublime.version()) >= 2174:
 		settings_base = sublime.load_settings('Preferences.sublime-settings')
 	else:
 		settings_base = sublime.load_settings('Base File.sublime-settings')
+
+
+def plugin_loaded():
+	global Pref
+	load_settings()
 
 	class Pref:
 		def load(self):
@@ -46,12 +52,18 @@ def plugin_loaded():
 	Pref = Pref()
 	Pref.load()
 
-	settings.add_on_change('reload', lambda:Pref.load())
-	settings_base.add_on_change('wordhighlight-reload', lambda:Pref.load())
+	settings.add_on_change('HighlightWordsOnSelectionBase', lambda: Pref.load())
+	settings_base.add_on_change('HighlightWordsOnSelection', lambda: Pref.load())
 	if Pref.highlight_when_selection_is_empty and not 'running_wh_loop' in globals():
 		global running_wh_loop
 		running_wh_loop = True
 		thread.start_new_thread(wh_loop, ())
+
+
+def plugin_unloaded():
+	settings_base.clear_on_change('HighlightWordsOnSelection')
+	settings_base.clear_on_change('HighlightWordsOnSelectionBase')
+
 
 def wh_loop():
 	while True:
@@ -71,11 +83,12 @@ def escape_regex(str):
 		str = str.replace('\\' + c, c)
 	return str
 
-class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
+
+class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		Pref.enabled = not Pref.enabled
 		if not Pref.enabled:
-			sublime.active_window().active_view().erase_regions("WordHighlight")
+			sublime.active_window().active_view().erase_regions("HighlightWordsOnSelection")
 		else:
 			WordHighlightListener().highlight_occurences(sublime.active_window().active_view())
 
@@ -85,9 +98,10 @@ class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
 
 class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
-		wh = self.view.get_regions("WordHighlight")
+		wh = self.view.get_regions("HighlightWordsOnSelection")
 		for w in wh:
 			self.view.sel().add(w)
+
 
 class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
@@ -95,13 +109,14 @@ class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
 		sel.reverse()
 		if sel:
 			word = sel[0]
-			wh = self.view.get_regions("WordHighlight")
+			wh = self.view.get_regions("HighlightWordsOnSelection")
 			for w in wh:
 				if w.end() > word.end() and w.end() > Pref.select_next_word_skiped:
 					self.view.sel().add(w)
 					self.view.show(w)
 					Pref.select_next_word_skiped = w.end()
 					break;
+
 
 class SelectHighlightedSkipLastWordCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
@@ -110,6 +125,7 @@ class SelectHighlightedSkipLastWordCommand(sublime_plugin.TextCommand):
 		if sel and len(sel) > 1:
 			self.view.sel().subtract(sel[0])
 			Pref.select_next_word_skiped = sel[0].end()
+
 
 class WordHighlightClickCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
@@ -126,7 +142,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		if not view.is_loading():
 			Pref.word_separators = view.settings().get('word_separators') or settings_base.get('word_separators')
 			if not Pref.enabled:
-				view.erase_regions("WordHighlight")
+				view.erase_regions("HighlightWordsOnSelection")
 
 	def on_selection_modified(self, view):
 		active_window = sublime.active_window()
@@ -155,8 +171,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
 	def highlight_occurences(self, view):
 		# print( "view.has_non_empty_selection_region:", view.has_non_empty_selection_region() )
 		if not Pref.highlight_when_selection_is_empty and not view.has_non_empty_selection_region():
-			view.erase_status("WordHighlight")
-			view.erase_regions("WordHighlight")
+			view.erase_status("HighlightWordsOnSelection")
+			view.erase_regions("HighlightWordsOnSelection")
 			Pref.prev_regions = None
 			Pref.prev_selections = None
 			return
@@ -208,14 +224,14 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				occurrencesMessage.append('"' + string + '" '+str(occurrences) +' ')
 				occurrencesCount = occurrencesCount + occurrences
 		if Pref.prev_regions != regions:
-			view.erase_regions("WordHighlight")
+			view.erase_regions("HighlightWordsOnSelection")
 			if regions:
 				if Pref.highlight_delay == 0:
-					view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.icon_type_on_gutter if Pref.mark_occurrences_on_gutter else "", sublime.DRAW_NO_FILL if Pref.draw_outlined else 0)
+					view.add_regions("HighlightWordsOnSelection", regions, Pref.color_scope_name, Pref.icon_type_on_gutter if Pref.mark_occurrences_on_gutter else "", sublime.DRAW_NO_FILL if Pref.draw_outlined else 0)
 				else:
 					sublime.set_timeout(lambda:self.delayed_highlight(view, regions, occurrencesMessage, limited_size), Pref.highlight_delay)
 			else:
-				view.erase_status("WordHighlight")
+				view.erase_status("HighlightWordsOnSelection")
 			Pref.prev_regions = regions
 
 	def find_regions(self, view, regions, string, limited_size):
@@ -248,4 +264,4 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
 	def delayed_highlight(self, view, regions, occurrencesMessage, limited_size):
 		if regions == Pref.prev_regions:
-			view.add_regions("WordHighlight", regions, Pref.color_scope_name, Pref.icon_type_on_gutter if Pref.mark_occurrences_on_gutter else "", sublime.DRAW_NO_FILL if Pref.draw_outlined else 0)
+			view.add_regions("HighlightWordsOnSelection", regions, Pref.color_scope_name, Pref.icon_type_on_gutter if Pref.mark_occurrences_on_gutter else "", sublime.DRAW_NO_FILL if Pref.draw_outlined else 0)

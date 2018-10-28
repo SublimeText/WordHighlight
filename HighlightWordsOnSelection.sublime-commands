@@ -1,6 +1,6 @@
 [
     {
-        "caption": "WordHighlight: Toggle Enabled",
-        "command": "set_word_highlight_enabled"
+        "caption": "HighlightWordsOnSelection: Toggle Enabled",
+        "command": "highlight_words_on_selection_enabled"
     }
 ]

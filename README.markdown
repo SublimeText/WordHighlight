@@ -11,7 +11,7 @@ Install
 
 The easiest method to install would be using [Package Control](https://sublime.wbond.net/installation).
 Ensure you have the latest by visiting that link, then open the command palette, type in
-"Install Package", and search for "WordHighLight".
+"Install Package", and search for "HighlightWordsOnSelection".
 
 Alternatively, to manually install go to your Packages subdirectory under ST's data directory, where `X` is the ST version:
 
@@ -22,14 +22,14 @@ Alternatively, to manually install go to your Packages subdirectory under ST's d
 
 Then clone this repository:
 
-    git clone git://github.com/SublimeText/WordHighlight.git
+    git clone git://github.com/evandroforks/HighlightWordsOnSelection.git
 
 That's it!
 
 Options
 -------
 
-Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime-settings` file:
+Under the Packages/HighlightWordsOnSelection sub-directory, edit the `HighlightWordsOnSelection.sublime-settings` file:
 
 *	`"draw_outlined" : true`
 
@@ -97,7 +97,7 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 
 * `"file_size_limit" : 4194304`
 
-	Files bigger than this number will put WordHighlight on mode "highlight around view port" (a portion of the document)
+	Files bigger than this number will put HighlightWordsOnSelection on mode "highlight around view port" (a portion of the document)
 
 * `"when_file_size_limit_search_this_num_of_characters" : 20000`
 
