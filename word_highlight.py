@@ -38,6 +38,7 @@ def plugin_loaded():
 			Pref.mark_occurrences_on_gutter                          = bool(settings.get('mark_occurrences_on_gutter', False))
 			Pref.icon_type_on_gutter                                 = settings.get("icon_type_on_gutter", "dot")
 			Pref.highlight_when_selection_is_empty                   = bool(settings.get('highlight_when_selection_is_empty', False))
+			Pref.highlight_only_whole_word_when_selection_is_empty   = bool(settings.get('highlight_only_whole_word_when_selection_is_empty', False))
 			Pref.highlight_word_under_cursor_when_selection_is_empty = bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
 			Pref.highlight_non_word_characters                       = bool(settings.get('highlight_non_word_characters', False))
 			Pref.word_separators                                     = settings_base.get('word_separators')
@@ -201,7 +202,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				if string not in processedWords:
 					processedWords.append(string)
 					if string and all([not c in Pref.word_separators for c in string]):
-							regions = self.find_regions(view, regions, string, limited_size)
+							regions = self.find_regions(view, regions, string, limited_size, True)
 					if not Pref.highlight_word_under_cursor_when_selection_is_empty:
 						for s in view.sel():
 							regions = [r for r in regions if not r.contains(s)]
@@ -209,7 +210,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				string = view.substr(sel)
 				if string and string not in processedWords:
 					processedWords.append(string)
-					regions = self.find_regions(view, regions, string, limited_size)
+					regions = self.find_regions(view, regions, string, limited_size, False)
 			elif not sel.empty():
 				word = view.word(sel)
 				if word.end() == sel.end() and word.begin() == sel.begin():
@@ -217,7 +218,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 					if string not in processedWords:
 						processedWords.append(string)
 						if string and all([not c in Pref.word_separators for c in string]):
-								regions = self.find_regions(view, regions, string, limited_size)
+								regions = self.find_regions(view, regions, string, limited_size, False)
 
 			occurrences = len(regions)-occurrencesCount;
 			if occurrences > 0:
@@ -234,13 +235,21 @@ class WordHighlightListener(sublime_plugin.EventListener):
 				view.erase_status("HighlightWordsOnSelection")
 			Pref.prev_regions = regions
 
-	def find_regions(self, view, regions, string, limited_size):
-		# It seems as if \b doesn't pay attention to word_separators, but
-		# \w does. Hence we use lookaround assertions instead of \b.
+	def find_regions(self, view, regions, string, limited_size, is_selection_empty):
+		# to to to too
 		if Pref.highlight_non_word_characters:
-			search = escape_regex(string)
+			if Pref.highlight_only_whole_word_when_selection_is_empty and is_selection_empty:
+				search = r'\b'+escape_regex(string)+r'\b'
+			else:
+				search = escape_regex(string)
+
 		else:
-			search = r'(?<!\w)'+escape_regex(string)+r'(?!\w)'
+			# It seems as if \b doesn't pay attention to word_separators, but
+			# \w does. Hence we use lookaround assertions instead of \b.
+			if Pref.highlight_only_whole_word_when_selection_is_empty and is_selection_empty:
+				search = r'\b(?<!\w)'+escape_regex(string)+r'(?!\w)\b'
+			else:
+				search = r'(?<!\w)'+escape_regex(string)+r'(?!\w)'
 
 		if not limited_size:
 			regions += view.find_all(search, Pref.case_sensitive)

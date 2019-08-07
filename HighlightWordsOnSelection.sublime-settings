@@ -1,5 +1,5 @@
 {
-	"color_scope_name": "region.yellowish",
+	"color_scope_name": "function.call",
 	"case_sensitive": true,
 	"draw_outlined": true,
 
@@ -8,8 +8,9 @@
 	"icon_type_on_gutter" : "dot",
 
 	"highlight_delay": 0,
-	"highlight_when_selection_is_empty": false,
-	"highlight_word_under_cursor_when_selection_is_empty": false,
+	"highlight_when_selection_is_empty": true,
+	"highlight_only_whole_word_when_selection_is_empty": true,
+	"highlight_word_under_cursor_when_selection_is_empty": true,
 	"highlight_non_word_characters": true,
 
 	"file_size_limit": 4194304,
