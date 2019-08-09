@@ -7,7 +7,6 @@
 	// valid types: dot, circle, bookmark and cross
 	"icon_type_on_gutter" : "dot",
 
-	"highlight_delay": 0,
 	"highlight_when_selection_is_empty": true,
 	"highlight_only_whole_word_when_selection_is_empty": true,
 	"highlight_word_under_cursor_when_selection_is_empty": true,
