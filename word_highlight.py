@@ -221,7 +221,7 @@ def highlight_occurences(view):
         return
 
     # todo: The list cast below can go away when Sublime 3's Selection class implements __str__
-    prev_selections = str(list(view.sel()))
+    prev_selections = str(view.sel())
 
     # print( "prev_selections:", prev_selections )
     if Pref.prev_selections == prev_selections:
