@@ -1,0 +1,17 @@
+{
+	"highlight_words_on_selection.color_scope_name": "function.call",
+	"highlight_words_on_selection.case_sensitive": true,
+	"highlight_words_on_selection.draw_outlined": true,
+
+	"highlight_words_on_selection.mark_occurrences_on_gutter" : false,
+	// valid types: dot, circle, bookmark and cross
+	"highlight_words_on_selection.icon_type_on_gutter" : "dot",
+
+	"highlight_words_on_selection.when_selection_is_empty": true,
+	"highlight_words_on_selection.only_whole_word_when_selection_is_empty": true,
+	"highlight_words_on_selection.word_under_cursor_when_selection_is_empty": true,
+	"highlight_words_on_selection.non_word_characters": true,
+
+	"highlight_words_on_selection.file_size_limit": 4194304,
+	"highlight_words_on_selection.when_file_size_limit_search_this_num_of_characters": 20000
+}

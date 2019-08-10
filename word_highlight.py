@@ -6,59 +6,71 @@ import threading
 import sublime
 import sublime_plugin
 
-Pref = {}
-settings = {}
-settings_base = {}
-commands_to_reset = ('single_selection', 'single_selection_first', 'single_selection_last')
-
 g_sleepEvent = threading.Event()
 g_correct_view = None
 g_is_already_running = False
 
-def load_settings():
-    global settings
-    global settings_base
-    settings = sublime.load_settings('HighlightWordsOnSelection.sublime-settings')
+commands_to_reset = ('single_selection', 'single_selection_first', 'single_selection_last')
 
-    if int(sublime.version()) >= 2174:
-        settings_base = sublime.load_settings('Preferences.sublime-settings')
 
-    else:
-        settings_base = sublime.load_settings('Base File.sublime-settings')
+class Pref:
+    p = 'highlight_words_on_selection.'
+
+    timing                         = time.time()
+    enabled                        = True
+    prev_selections                = None
+    prev_regions                   = None
+    select_next_word_skipped       = 0
+    select_previous_word_skipped   = sys.maxsize
+    select_previous_word_last_word = False
+    select_next_word_last_word     = False
+
+    @classmethod
+    def when_file_size_limit_search_this_num_of_characters(cls, settings):
+        return int( settings.get( cls.p + 'when_file_size_limit_search_this_num_of_characters', 20000 ) )
+
+    @classmethod
+    def color_scope_name(cls, settings):
+        return settings.get( cls.p + 'color_scope_name', "comment" )
+
+    @classmethod
+    def case_sensitive(cls, settings):
+        return ( not bool( settings.get( cls.p + 'case_sensitive', True ) ) ) * sublime.IGNORECASE
+
+    @classmethod
+    def draw_outlined(cls, settings):
+        return bool( settings.get( cls.p + 'draw_outlined', True ) ) * sublime.DRAW_OUTLINED
+
+    @classmethod
+    def mark_occurrences_on_gutter(cls, settings):
+        return bool( settings.get( cls.p + 'mark_occurrences_on_gutter', False ) )
+
+    @classmethod
+    def icon_type_on_gutter(cls, settings):
+        return settings.get( cls.p + 'icon_type_on_gutter', 'dot' )
+
+    @classmethod
+    def when_selection_is_empty(cls, settings):
+        return bool( settings.get( cls.p + 'when_selection_is_empty', False ) )
+
+    @classmethod
+    def only_whole_word_when_selection_is_empty(cls, settings):
+        return bool( settings.get( cls.p + 'only_whole_word_when_selection_is_empty', False ) )
+
+    @classmethod
+    def word_under_cursor_when_selection_is_empty(cls, settings):
+        return bool( settings.get( cls.p + 'word_under_cursor_when_selection_is_empty', False ) )
+
+    @classmethod
+    def non_word_characters(cls, settings):
+        return bool( settings.get( cls.p + 'non_word_characters', False ) )
+
+    @classmethod
+    def file_size_limit(cls, settings):
+        return int( settings.get( cls.p + 'file_size_limit', 4194304 ) )
 
 
 def plugin_loaded():
-    global Pref
-    load_settings()
-
-    class Pref:
-        def load(self):
-            Pref.color_scope_name                                    = settings.get('color_scope_name', "comment")
-            Pref.case_sensitive                                      = (not bool(settings.get('case_sensitive', True))) * sublime.IGNORECASE
-            Pref.draw_outlined                                       = bool(settings.get('draw_outlined', True)) * sublime.DRAW_OUTLINED
-            Pref.mark_occurrences_on_gutter                          = bool(settings.get('mark_occurrences_on_gutter', False))
-            Pref.icon_type_on_gutter                                 = settings.get("icon_type_on_gutter", "dot")
-            Pref.highlight_when_selection_is_empty                   = bool(settings.get('highlight_when_selection_is_empty', False))
-            Pref.highlight_only_whole_word_when_selection_is_empty   = bool(settings.get('highlight_only_whole_word_when_selection_is_empty', False))
-            Pref.highlight_word_under_cursor_when_selection_is_empty = bool(settings.get('highlight_word_under_cursor_when_selection_is_empty', False))
-            Pref.highlight_non_word_characters                       = bool(settings.get('highlight_non_word_characters', False))
-            Pref.word_separators                                     = settings_base.get('word_separators')
-            Pref.file_size_limit                                     = int(settings.get('file_size_limit', 4194304))
-            Pref.when_file_size_limit_search_this_num_of_characters  = int(settings.get('when_file_size_limit_search_this_num_of_characters', 20000))
-            Pref.timing                                              = time.time()
-            Pref.enabled                                             = True
-            Pref.prev_selections                                     = None
-            Pref.prev_regions                                        = None
-            Pref.select_next_word_skipped                            = 0
-            Pref.select_previous_word_skipped                        = sys.maxsize
-            Pref.select_previous_word_last_word                      = False
-            Pref.select_next_word_last_word                          = False
-
-    Pref = Pref()
-    Pref.load()
-
-    settings.add_on_change('HighlightWordsOnSelectionBase', lambda: Pref.load())
-    settings_base.add_on_change('HighlightWordsOnSelection', lambda: Pref.load())
 
     if not g_is_already_running:
         # unblocks any thread waiting in a g_sleepEvent.wait() call
@@ -74,9 +86,6 @@ def plugin_unloaded():
 
     # unblocks any thread waiting in a g_sleepEvent.wait() call
     g_sleepEvent.set()
-
-    settings_base.clear_on_change('HighlightWordsOnSelection')
-    settings_base.clear_on_change('HighlightWordsOnSelectionBase')
 
 
 def configure_main_thread():
@@ -261,7 +270,6 @@ class WordHighlightListener(sublime_plugin.EventListener):
         # Pref.prev_selections = None
 
         if not view.is_loading():
-            Pref.word_separators = view.settings().get('word_separators') or settings_base.get('word_separators')
 
             if not Pref.enabled:
                 view.erase_regions("HighlightWordsOnSelection")
@@ -271,24 +279,21 @@ class WordHighlightListener(sublime_plugin.EventListener):
         active_window = sublime.active_window()
         panel_has_focus = not view.file_name()
 
+        # Multiple event hooks don’t work with clones
+        # https://github.com/SublimeTextIssues/Core/issues/289
         is_widget = view.settings().get('is_widget')
         active_panel = active_window.active_panel()
 
         # print( "is_widget:", is_widget )
         # print( "panel_has_focus:", panel_has_focus )
-        if active_panel and panel_has_focus or is_widget:
-            # print( '1' )
-            correct_view = view
+        if not ( active_panel and panel_has_focus or is_widget ):
+            view = active_window.active_view()
 
-        else:
-            # print( '2' )
-            correct_view = active_window.active_view()
-
-        if correct_view and Pref.enabled and not is_widget:
+        if view and Pref.enabled and not is_widget:
             global g_correct_view
-            g_correct_view = correct_view
+            g_correct_view = view
 
-            # print( "correct_view:", correct_view )
+            # print( "view:", view )
             g_sleepEvent.set()
 
 
@@ -301,18 +306,19 @@ def clear_line_skipping():
 
 
 def highlight_occurences(view):
+    settings = view.settings()
+
     # print( "view.has_non_empty_selection_region:", view.has_non_empty_selection_region() )
     if not view.has_non_empty_selection_region():
         clear_line_skipping()
 
-        if not Pref.highlight_when_selection_is_empty:
+        if not Pref.when_selection_is_empty(settings):
             view.erase_status("HighlightWordsOnSelection")
             view.erase_regions("HighlightWordsOnSelection")
             Pref.prev_regions = None
             Pref.prev_selections = None
             return
 
-    # todo: The list cast below can go away when Sublime 3's Selection class implements __str__
     prev_selections = str(view.sel())
 
     # print( "prev_selections:", prev_selections )
@@ -322,7 +328,7 @@ def highlight_occurences(view):
     else:
         Pref.prev_selections = prev_selections
 
-    if view.size() <= Pref.file_size_limit:
+    if view.size() <= Pref.file_size_limit(settings):
         limited_size = False
 
     else:
@@ -333,24 +339,25 @@ def highlight_occurences(view):
     processedWords = []
     occurrencesMessage = []
     occurrencesCount = 0
+    word_separators = settings.get('word_separators')
 
     for sel in view.sel():
 
-        if Pref.highlight_when_selection_is_empty and sel.empty():
+        if Pref.when_selection_is_empty(settings) and sel.empty():
             string = view.substr(view.word(sel)).strip()
 
             if string not in processedWords:
                 processedWords.append(string)
 
-                if string and all([not c in Pref.word_separators for c in string]):
+                if string and all([not c in word_separators for c in string]):
                         regions = find_regions(view, regions, string, limited_size, True)
 
-                if not Pref.highlight_word_under_cursor_when_selection_is_empty:
+                if not Pref.word_under_cursor_when_selection_is_empty(settings):
 
                     for s in view.sel():
                         regions = [r for r in regions if not r.contains(s)]
 
-        elif not sel.empty() and Pref.highlight_non_word_characters:
+        elif not sel.empty() and Pref.non_word_characters(settings):
             string = view.substr(sel)
 
             if string and string not in processedWords:
@@ -366,7 +373,7 @@ def highlight_occurences(view):
                 if string not in processedWords:
                     processedWords.append(string)
 
-                    if string and all([not c in Pref.word_separators for c in string]):
+                    if string and all([not c in word_separators for c in string]):
                             regions = find_regions(view, regions, string, limited_size, False)
 
         occurrences = len(regions)-occurrencesCount;
@@ -379,7 +386,7 @@ def highlight_occurences(view):
         view.erase_regions("HighlightWordsOnSelection")
 
         if regions:
-            view.add_regions("HighlightWordsOnSelection", regions, Pref.color_scope_name, Pref.icon_type_on_gutter if Pref.mark_occurrences_on_gutter else "", sublime.DRAW_NO_FILL if Pref.draw_outlined else 0)
+            view.add_regions("HighlightWordsOnSelection", regions, Pref.color_scope_name(settings), Pref.icon_type_on_gutter(settings) if Pref.mark_occurrences_on_gutter(settings) else "", sublime.DRAW_NO_FILL if Pref.draw_outlined(settings) else 0)
 
         else:
             view.erase_status("HighlightWordsOnSelection")
@@ -388,9 +395,11 @@ def highlight_occurences(view):
 
 
 def find_regions(view, regions, string, limited_size, is_selection_empty):
+    settings = view.settings()
+
     # to to to too
-    if Pref.highlight_non_word_characters:
-        if Pref.highlight_only_whole_word_when_selection_is_empty and is_selection_empty:
+    if Pref.non_word_characters(settings):
+        if Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
             search = r'\b'+escape_regex(string)+r'\b'
 
         else:
@@ -399,17 +408,17 @@ def find_regions(view, regions, string, limited_size, is_selection_empty):
     else:
         # It seems as if \b doesn't pay attention to word_separators, but
         # \w does. Hence we use lookaround assertions instead of \b.
-        if Pref.highlight_only_whole_word_when_selection_is_empty and is_selection_empty:
+        if Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
             search = r'\b(?<!\w)'+escape_regex(string)+r'(?!\w)\b'
 
         else:
             search = r'(?<!\w)'+escape_regex(string)+r'(?!\w)'
 
     if not limited_size:
-        regions += view.find_all(search, Pref.case_sensitive)
+        regions += view.find_all(search, Pref.case_sensitive(settings))
 
     else:
-        chars = Pref.when_file_size_limit_search_this_num_of_characters
+        chars = Pref.when_file_size_limit_search_this_num_of_characters(settings)
         visible_region = view.visible_region()
 
         begin = 0 if visible_region.begin() - chars < 0 else visible_region.begin() - chars

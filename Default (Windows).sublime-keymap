@@ -1,7 +1,15 @@
 [
 	{ "keys": ["alt+enter"], "command": "select_highlighted_words", "context":
 		[
+			{ "key": "setting.highlight_words_on_selection.when_selection_is_empty" },
 			{ "key": "setting.is_widget", "operator": "equal", "operand": false },
 		]
-	}
+	},
+	{ "keys": ["alt+enter"], "command": "select_highlighted_words", "context":
+		[
+			{ "key": "setting.highlight_words_on_selection.when_selection_is_empty", "operator": "equal", "operand": false },
+			{ "key": "selection_empty", "operator": "equal", "operand": false },
+			{ "key": "setting.is_widget", "operator": "equal", "operand": false },
+		]
+	},
 ]
