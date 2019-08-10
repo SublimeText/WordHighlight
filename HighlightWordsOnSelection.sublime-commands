@@ -1,6 +1,9 @@
 [
     { "caption": "HighlightWordsOnSelection: Select Next Word", "command": "select_highlighted_next_word" },
-    { "caption": "HighlightWordsOnSelection: Select Highlighted Skip Last Word", "command": "select_highlighted_skip_last_word" },
+    { "caption": "HighlightWordsOnSelection: Select Previous Word", "command": "select_highlighted_previous_word" },
+
+    { "caption": "HighlightWordsOnSelection: Select Highlighted Skip Next Word", "command": "select_highlighted_skip_next_word" },
+    { "caption": "HighlightWordsOnSelection: Select Highlighted Skip Previous Word", "command": "select_highlighted_skip_previous_word" },
 
     { "caption": "HighlightWordsOnSelection: Toggle Enabled", "command": "highlight_words_on_selection_enabled" },
     { "caption": "HighlightWordsOnSelection: Select Highlighted Words", "command": "select_highlighted_words" },

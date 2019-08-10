@@ -9,11 +9,11 @@ import sublime_plugin
 Pref = {}
 settings = {}
 settings_base = {}
+commands_to_reset = ('single_selection', 'single_selection_first', 'single_selection_last')
 
 g_sleepEvent = threading.Event()
 g_correct_view = None
 g_is_already_running = False
-
 
 def load_settings():
     global settings
@@ -49,7 +49,10 @@ def plugin_loaded():
             Pref.enabled                                             = True
             Pref.prev_selections                                     = None
             Pref.prev_regions                                        = None
-            Pref.select_next_word_skiped                             = 0
+            Pref.select_next_word_skipped                            = 0
+            Pref.select_previous_word_skipped                        = sys.maxsize
+            Pref.select_previous_word_last_word                      = False
+            Pref.select_next_word_last_word                          = False
 
     Pref = Pref()
     Pref.load()
@@ -148,36 +151,114 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 
 class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        sel = [s for s in self.view.sel()]
-        sel.reverse()
+        view = self.view
+        selections = view.sel()
 
-        if sel:
-            word = sel[0]
-            wh = self.view.get_regions("HighlightWordsOnSelection")
+        # print( 'selections', selections )
+        if selections:
+            word_regions = view.get_regions("HighlightWordsOnSelection")
 
-            for w in wh:
+            if word_regions:
+                # print( 'select_next_word_last_word', Pref.select_next_word_last_word, Pref.select_next_word_skipped )
+                if Pref.select_next_word_last_word:
+                    last_word = word_regions[0].begin() - 1
 
-                if w.end() > word.end() and w.end() > Pref.select_next_word_skiped:
-                    self.view.sel().add(w)
-                    self.view.show(w)
-                    Pref.select_next_word_skiped = w.end()
-                    break;
+                else:
+                    last_word = selections[0].end() - 1
+
+                # print( 'last_word', last_word, view.substr( last_word ), 'select_next_word_skipped', Pref.select_next_word_skipped, 'word_regions', word_regions )
+                for next_word in word_regions:
+
+                    # print( 'next_word', next_word.end(), last_word, view.substr(next_word) )
+                    if next_word.end() > last_word and next_word.end() > Pref.select_next_word_skipped:
+                        view.sel().add(next_word)
+                        view.show(next_word)
+                        Pref.select_next_word_skipped = next_word.end()
+                        break;
+
+                if next_word == word_regions[-1]:
+                    # print('Triggering FIX...')
+                    Pref.select_next_word_last_word = True
+                    Pref.select_next_word_skipped = word_regions[0].begin()
 
 
-class SelectHighlightedSkipLastWordCommand(sublime_plugin.TextCommand):
+class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        sel = [s for s in self.view.sel()]
-        sel.reverse()
+        view = self.view
+        selections = view.sel()
 
-        if sel and len(sel) > 1:
-            self.view.sel().subtract(sel[0])
-            Pref.select_next_word_skiped = sel[0].end()
+        # print( 'selections', selections )
+        if selections:
+            word_regions = view.get_regions("HighlightWordsOnSelection")
+
+            if word_regions:
+                # print( 'select_previous_word_last_word', Pref.select_previous_word_last_word, Pref.select_previous_word_skipped )
+                if Pref.select_previous_word_last_word:
+                    first_word = word_regions[-1].end() + 1
+
+                else:
+                    first_word = selections[0].begin() + 1
+
+                # print( 'first_word', first_word, view.substr( first_word ), 'select_previous_word_skipped', Pref.select_previous_word_skipped, 'word_regions', word_regions )
+                for previous_word in reversed( word_regions ):
+
+                    # print( 'previous_word', previous_word.end(), first_word, view.substr(previous_word) )
+                    if previous_word.begin() < first_word and previous_word.begin() < Pref.select_previous_word_skipped:
+                        view.sel().add(previous_word)
+                        view.show(previous_word)
+                        Pref.select_previous_word_skipped = previous_word.begin()
+                        break;
+
+                if previous_word == word_regions[0]:
+                    # print('Triggering FIX...')
+                    Pref.select_previous_word_last_word = True
+                    Pref.select_previous_word_skipped = word_regions[-1].end()
+
+
+class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        selections = view.sel()
+
+        if selections and len(selections) > 1:
+            word_regions = view.get_regions("HighlightWordsOnSelection")
+
+            if selections[-1] == word_regions[-1]:
+                Pref.select_next_word_skipped = 0
+
+            else:
+                Pref.select_next_word_skipped = selections[-1].end()
+
+            selections.subtract(selections[-1])
+            view.run_command( 'select_highlighted_next_word' )
+
+
+class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        selections = view.sel()
+
+        if selections and len(selections) > 1:
+            word_regions = view.get_regions("HighlightWordsOnSelection")
+
+            if selections[0] == word_regions[0]:
+                Pref.select_next_word_skipped = sys.maxsize
+
+            else:
+                Pref.select_next_word_skipped = selections[0].begin()
+
+            selections.subtract(selections[0])
+            view.run_command( 'select_highlighted_previous_word' )
 
 
 class WordHighlightListener(sublime_plugin.EventListener):
+    def on_window_command(self, window, command_name, args):
+
+        if command_name in commands_to_reset:
+            clear_line_skipping()
+
     def on_activated(self, view):
-        Pref.prev_selections = None
-        Pref.select_next_word_skiped = 0
+        # Pref.prev_selections = None
 
         if not view.is_loading():
             Pref.word_separators = view.settings().get('word_separators') or settings_base.get('word_separators')
@@ -211,14 +292,25 @@ class WordHighlightListener(sublime_plugin.EventListener):
             g_sleepEvent.set()
 
 
+def clear_line_skipping():
+    Pref.select_next_word_skipped = 0
+    Pref.select_previous_word_skipped = sys.maxsize
+
+    Pref.select_next_word_last_word = False
+    Pref.select_previous_word_last_word = False
+
+
 def highlight_occurences(view):
     # print( "view.has_non_empty_selection_region:", view.has_non_empty_selection_region() )
-    if not Pref.highlight_when_selection_is_empty and not view.has_non_empty_selection_region():
-        view.erase_status("HighlightWordsOnSelection")
-        view.erase_regions("HighlightWordsOnSelection")
-        Pref.prev_regions = None
-        Pref.prev_selections = None
-        return
+    if not view.has_non_empty_selection_region():
+        clear_line_skipping()
+
+        if not Pref.highlight_when_selection_is_empty:
+            view.erase_status("HighlightWordsOnSelection")
+            view.erase_regions("HighlightWordsOnSelection")
+            Pref.prev_regions = None
+            Pref.prev_selections = None
+            return
 
     # todo: The list cast below can go away when Sublime 3's Selection class implements __str__
     prev_selections = str(view.sel())
