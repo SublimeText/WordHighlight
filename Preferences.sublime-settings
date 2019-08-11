@@ -10,6 +10,7 @@
 
 	// https://forum.sublimetext.com/t/plugin-soft-undo/40064
 	"highlight_words_on_selection.enable_find_under_expand_bug_fixes": true,
+	"highlight_words_on_selection.copy_selected_text_into_find_panel": true,
 
 	"highlight_words_on_selection.when_selection_is_empty": true,
 	"highlight_words_on_selection.only_whole_word_when_selection_is_empty": true,

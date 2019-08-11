@@ -62,6 +62,10 @@ class Pref:
         return bool( settings.get( cls.p + 'enable_find_under_expand_bug_fixes', False ) )
 
     @classmethod
+    def copy_selected_text_into_find_panel(cls, settings):
+        return bool( settings.get( cls.p + 'copy_selected_text_into_find_panel', True ) )
+
+    @classmethod
     def when_selection_is_empty(cls, settings):
         return bool( settings.get( cls.p + 'when_selection_is_empty', False ) )
 
@@ -224,6 +228,9 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
             word_regions = view.get_regions( 'HighlightWordsOnSelection' )
 
             if word_regions:
+                settings = view.settings()
+                copy_selected_text_into_find_panel = Pref.copy_selected_text_into_find_panel( settings )
+
                 # print( 'select_next_word_last_word', Pref.select_next_word_last_word, Pref.select_next_word_skipped )
                 if Pref.select_next_word_last_word:
                     last_word = word_regions[0]
@@ -241,6 +248,10 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
 
                         if Pref.selected_first_word is None:
                             Pref.selected_first_word = next_word
+
+                            if copy_selected_text_into_find_panel:
+                                view.window().run_command( "fixed_toggle_find_panel",
+                                        { "command": "insert", "args": { "characters": view.substr( next_word ) } } )
 
                         if not next_word.empty() and selections.contains( next_word ):
                             # print( 'skipping next_word', next_word )
@@ -281,6 +292,9 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
             word_regions = view.get_regions( 'HighlightWordsOnSelection' )
 
             if word_regions:
+                settings = view.settings()
+                copy_selected_text_into_find_panel = Pref.copy_selected_text_into_find_panel( settings )
+
                 # print( 'select_previous_word_last_word', Pref.select_previous_word_last_word, Pref.select_previous_word_skipped )
                 if Pref.select_previous_word_last_word:
                     first_word = word_regions[-1]
@@ -298,6 +312,10 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
 
                         if Pref.selected_first_word is None:
                             Pref.selected_first_word = previous_word
+
+                            if copy_selected_text_into_find_panel:
+                                view.window().run_command( "fixed_toggle_find_panel",
+                                        { "command": "insert", "args": { "characters": view.substr( previous_word ) } } )
 
                         if not previous_word.empty() and selections.contains( previous_word ):
                             # print( 'skipping previous_word', previous_word )
