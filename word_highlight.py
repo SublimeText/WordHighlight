@@ -19,7 +19,7 @@ class Pref:
     timing                         = time.time()
     enabled                        = True
     is_file_limit_reached          = False
-    is_on_whole_word_mode          = False
+    is_on_word_selection_mode      = False
     prev_selections                = None
     prev_regions                   = None
 
@@ -167,9 +167,7 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-
-        if not view.has_non_empty_selection_region():
-            Pref.is_on_whole_word_mode = True
+        Pref.is_on_word_selection_mode = True
 
         sublime.set_timeout( lambda: view.run_command( 'select_highlighted_next_word_bug_fixer' ), 0 )
 
@@ -221,9 +219,7 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
 class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-
-        if not view.has_non_empty_selection_region():
-            Pref.is_on_whole_word_mode = True
+        Pref.is_on_word_selection_mode = True
 
         sublime.set_timeout( lambda: view.run_command( 'select_highlighted_previous_word_bug_fixer' ), 0 )
 
@@ -355,6 +351,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
                 view.erase_regions( 'HighlightWordsOnSelection' )
 
     def on_selection_modified(self, view):
+        if Pref.is_on_word_selection_mode: return
+
         # print('on_selection_modified', view.substr(sublime.Region(0, 10)))
         active_window = sublime.active_window()
         panel_has_focus = not view.file_name()
@@ -379,13 +377,14 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
 def clear_line_skipping():
     # print('Reseting...')
+    Pref.is_on_word_selection_mode = False
+
     Pref.select_word_undo.clear()
     Pref.select_word_redo.clear()
 
     Pref.select_next_word_skipped = [ 0 ]
     Pref.select_previous_word_skipped = [ sys.maxsize ]
 
-    Pref.is_on_whole_word_mode = False
     Pref.select_next_word_last_word = False
     Pref.select_previous_word_last_word = False
 
@@ -485,7 +484,7 @@ def find_regions(view, regions, string, limited_size, is_selection_empty):
 
     # to to to too
     if Pref.non_word_characters(settings):
-        if Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty or Pref.is_on_whole_word_mode:
+        if Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
             search = r'\b' + escape_regex(string) + r'\b'
 
         else:
