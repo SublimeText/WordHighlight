@@ -4,8 +4,12 @@
 	"highlight_words_on_selection.draw_outlined": true,
 
 	"highlight_words_on_selection.mark_occurrences_on_gutter" : false,
+
 	// valid types: dot, circle, bookmark and cross
 	"highlight_words_on_selection.icon_type_on_gutter" : "dot",
+
+	// https://forum.sublimetext.com/t/plugin-soft-undo/40064
+	"highlight_words_on_selection.enable_find_under_expand_bug_fixes": true,
 
 	"highlight_words_on_selection.when_selection_is_empty": true,
 	"highlight_words_on_selection.only_whole_word_when_selection_is_empty": true,

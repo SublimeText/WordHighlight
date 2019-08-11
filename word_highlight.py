@@ -58,6 +58,10 @@ class Pref:
         return settings.get( cls.p + 'icon_type_on_gutter', 'dot' )
 
     @classmethod
+    def enable_find_under_expand_bug_fixes(cls, settings):
+        return bool( settings.get( cls.p + 'enable_find_under_expand_bug_fixes', False ) )
+
+    @classmethod
     def when_selection_is_empty(cls, settings):
         return bool( settings.get( cls.p + 'when_selection_is_empty', False ) )
 
@@ -389,7 +393,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
         elif command_name == 'single_selection_first':
 
-            if Pref.selected_first_word is not None:
+            if Pref.enable_find_under_expand_bug_fixes( view.settings() ) and Pref.selected_first_word is not None:
                 Pref.region_borders = Pref.selected_first_word
 
                 clear_line_skipping()
@@ -399,7 +403,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
         elif command_name == 'single_selection_last':
 
-            if Pref.selected_last_word is not None:
+            if Pref.enable_find_under_expand_bug_fixes( view.settings() ) and Pref.selected_last_word is not None:
                 Pref.region_borders = Pref.selected_last_word
 
                 clear_line_skipping()

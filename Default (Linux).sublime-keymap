@@ -8,12 +8,14 @@
 
     { "keys": ["ctrl+d"], "command": "select_highlighted_next_word", "context":
         [
+            { "key": "setting.highlight_words_on_selection.enable_find_under_expand_bug_fixes" },
             { "key": "setting.is_widget", "operator": "equal", "operand": false },
             { "key": "is_highlight_words_on_selection_working" },
         ]
     },
     { "keys": ["ctrl+k", "ctrl+d"], "command": "select_highlighted_skip_next_word", "context":
         [
+            { "key": "setting.highlight_words_on_selection.enable_find_under_expand_bug_fixes" },
             { "key": "setting.is_widget", "operator": "equal", "operand": false },
             { "key": "is_highlight_words_on_selection_working" },
         ]
