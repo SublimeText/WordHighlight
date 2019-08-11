@@ -167,10 +167,17 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        selections = view.sel()
 
         if not view.has_non_empty_selection_region():
             Pref.is_on_whole_word_mode = True
+
+        sublime.set_timeout( lambda: view.run_command( 'select_highlighted_next_word_bug_fixer' ), 0 )
+
+
+class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        selections = view.sel()
 
         # print( 'selections', selections )
         if selections:
@@ -214,10 +221,17 @@ class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
 class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        selections = view.sel()
 
         if not view.has_non_empty_selection_region():
             Pref.is_on_whole_word_mode = True
+
+        sublime.set_timeout( lambda: view.run_command( 'select_highlighted_previous_word_bug_fixer' ), 0 )
+
+
+class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        selections = view.sel()
 
         # print( 'selections', selections )
         if selections:
