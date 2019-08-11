@@ -379,7 +379,7 @@ class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
 class WordHighlightListener(sublime_plugin.EventListener):
 
     def on_text_command(self, view, command_name, args):
-        # print('command_name', command_name)
+        # print('command_name', command_name, args)
 
         if command_name == 'soft_undo':
 
@@ -426,6 +426,11 @@ class WordHighlightListener(sublime_plugin.EventListener):
                 return ('word_highlight_on_selection_single_selection_blinker', { "message": "LAST" })
 
             clear_line_skipping()
+
+        elif command_name == 'drag_select':
+
+            if 'event' in args:
+                clear_line_skipping()
 
     def on_query_context(self, view, key, operator, operand, match_all):
 
