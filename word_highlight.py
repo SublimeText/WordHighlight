@@ -18,6 +18,7 @@ class Pref:
 
     timing                         = time.time()
     enabled                        = True
+    is_file_limit_reached          = False
     prev_selections                = None
     prev_regions                   = None
 
@@ -311,7 +312,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
     def on_query_context(self, view, key, operator, operand, match_all):
 
         if key == "is_highlight_words_on_selection_working":
-            return view.get_regions("HighlightWordsOnSelection")
+            return not Pref.is_file_limit_reached and view.get_regions("HighlightWordsOnSelection")
 
     def on_activated(self, view):
         # Pref.prev_selections = None
@@ -446,6 +447,7 @@ def highlight_occurences(view):
 
 def find_regions(view, regions, string, limited_size, is_selection_empty):
     settings = view.settings()
+    Pref.is_file_limit_reached = False
 
     # to to to too
     if Pref.non_word_characters(settings):
@@ -482,6 +484,7 @@ def find_regions(view, regions, string, limited_size, is_selection_empty):
                 regions.append(region)
 
                 if region.end() > end:
+                    Pref.is_file_limit_reached = True
                     break
 
                 else:
