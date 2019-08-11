@@ -179,7 +179,7 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
         view = self.view
         selections = view.sel()
 
-        # print( 'selections', selections )
+        # print( 'selections', [s for s in selections] )
         if selections:
             word_regions = view.get_regions( 'HighlightWordsOnSelection' )
 
@@ -199,7 +199,7 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
                     # print( 'next_word_end', next_word.end(), 'last_word_end', last_word_end, view.substr(next_word) )
                     if next_word.end() > last_word_end and next_word.end() > Pref.select_next_word_skipped[-1]:
 
-                        if next_word in selections:
+                        if not next_word.empty() and selections.contains( next_word ):
                             # print( 'skipping next_word', next_word )
                             continue
 
@@ -233,7 +233,7 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
         view = self.view
         selections = view.sel()
 
-        # print( 'selections', selections )
+        # print( 'selections', [s for s in selections] )
         if selections:
             word_regions = view.get_regions( 'HighlightWordsOnSelection' )
 
@@ -253,8 +253,8 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
                     # print( 'previous_word_end', previous_word.end(), 'first_word_end', first_word_end, view.substr(previous_word) )
                     if previous_word.begin() < first_word_end and previous_word.begin() < Pref.select_previous_word_skipped[-1]:
 
-                        if previous_word in selections:
-                            # print( 'skipping first_word', first_word )
+                        if not previous_word.empty() and selections.contains( previous_word ):
+                            # print( 'skipping previous_word', previous_word )
                             continue
 
                         selections.add(previous_word)
