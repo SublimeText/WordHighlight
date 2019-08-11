@@ -179,17 +179,24 @@ class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
             if word_regions:
                 # print( 'select_next_word_last_word', Pref.select_next_word_last_word, Pref.select_next_word_skipped )
                 if Pref.select_next_word_last_word:
-                    last_word = word_regions[0].begin() - 1
+                    last_word = word_regions[0]
+                    last_word_end = last_word.begin() - 1
 
                 else:
-                    last_word = selections[0].end() - 1
+                    last_word = selections[0]
+                    last_word_end = last_word.end() - 1
 
-                # print( 'last_word', last_word, view.substr( last_word ), 'select_next_word_skipped', Pref.select_next_word_skipped, 'word_regions', word_regions )
+                # print( 'last_word_end', last_word_end, view.substr( last_word ), 'select_next_word_skipped', Pref.select_next_word_skipped, 'word_regions', word_regions )
                 for next_word in word_regions:
 
-                    # print( 'next_word', next_word.end(), last_word, view.substr(next_word) )
-                    if next_word.end() > last_word and next_word.end() > Pref.select_next_word_skipped[-1]:
-                        view.sel().add(next_word)
+                    # print( 'next_word_end', next_word.end(), 'last_word_end', last_word_end, view.substr(next_word) )
+                    if next_word.end() > last_word_end and next_word.end() > Pref.select_next_word_skipped[-1]:
+
+                        if next_word in selections:
+                            # print( 'skipping next_word', next_word )
+                            continue
+
+                        selections.add(next_word)
                         view.show(next_word)
 
                         Pref.select_word_undo.append( 'next' )
@@ -219,17 +226,24 @@ class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
             if word_regions:
                 # print( 'select_previous_word_last_word', Pref.select_previous_word_last_word, Pref.select_previous_word_skipped )
                 if Pref.select_previous_word_last_word:
-                    first_word = word_regions[-1].end() + 1
+                    first_word = word_regions[-1]
+                    first_word_end = first_word.end() + 1
 
                 else:
-                    first_word = selections[0].begin() + 1
+                    first_word = selections[0]
+                    first_word_end = first_word.begin() + 1
 
-                # print( 'first_word', first_word, view.substr( first_word ), 'select_previous_word_skipped', Pref.select_previous_word_skipped, 'word_regions', word_regions )
+                # print( 'first_word_end', first_word_end, view.substr( first_word ), 'select_previous_word_skipped', Pref.select_previous_word_skipped, 'word_regions', word_regions )
                 for previous_word in reversed( word_regions ):
 
-                    # print( 'previous_word', previous_word.end(), first_word, view.substr(previous_word) )
-                    if previous_word.begin() < first_word and previous_word.begin() < Pref.select_previous_word_skipped[-1]:
-                        view.sel().add(previous_word)
+                    # print( 'previous_word_end', previous_word.end(), 'first_word_end', first_word_end, view.substr(previous_word) )
+                    if previous_word.begin() < first_word_end and previous_word.begin() < Pref.select_previous_word_skipped[-1]:
+
+                        if previous_word in selections:
+                            # print( 'skipping first_word', first_word )
+                            continue
+
+                        selections.add(previous_word)
                         view.show(previous_word)
 
                         Pref.select_word_undo.append( 'previous' )
