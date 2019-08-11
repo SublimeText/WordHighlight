@@ -8,9 +8,8 @@ import sublime_plugin
 
 g_sleepEvent = threading.Event()
 g_correct_view = None
+g_region_borders = None
 g_is_already_running = False
-
-commands_to_reset = ('single_selection', 'single_selection_first', 'single_selection_last')
 
 
 class Pref:
@@ -22,6 +21,9 @@ class Pref:
     is_on_word_selection_mode      = False
     prev_selections                = None
     prev_regions                   = None
+
+    selected_first_word            = None
+    selected_last_word             = None
 
     select_next_word_last_word     = False
     select_previous_word_last_word = False
@@ -141,6 +143,45 @@ def escape_regex(str):
     return str
 
 
+def force_focus(view, region_borders):
+    window = view.window()
+    window.focus_view( view )
+    view.show( region_borders )
+
+
+class SingleSelectionBlinkerCommand(sublime_plugin.TextCommand):
+
+    def run(self, edit):
+        view = self.view
+        selections = view.sel()
+
+        def run_blinking_focus():
+            force_focus( view, g_region_borders )
+            view.run_command( "single_selection_blinker_helper" )
+
+        selections.clear()
+        sublime_plugin.sublime.status_message( 'Selection set to %s' % view.substr( g_region_borders ) )
+
+        # view.run_command( "move", {"by": "characters", "forward": False} )
+        # print( "SingleSelectionLast, Selecting last:", g_region_borders )
+        sublime.set_timeout( run_blinking_focus, 200 )
+        force_focus( view, g_region_borders )
+
+
+class SingleSelectionBlinkerHelperCommand(sublime_plugin.TextCommand):
+
+    def run(self, edit):
+        # print( 'Calling Selection Last Helper... ', g_region_borders )
+        view = self.view
+        selections = view.sel()
+
+        force_focus( view, g_region_borders )
+        selections.clear()
+
+        selections.add( g_region_borders )
+        force_focus( view, g_region_borders )
+
+
 class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         Pref.enabled = not Pref.enabled
@@ -197,6 +238,9 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
                     # print( 'next_word_end', next_word.end(), 'last_word_end', last_word_end, view.substr(next_word) )
                     if next_word.end() > last_word_end and next_word.end() > Pref.select_next_word_skipped[-1]:
 
+                        if Pref.selected_first_word is None:
+                            Pref.selected_first_word = next_word
+
                         if not next_word.empty() and selections.contains( next_word ):
                             # print( 'skipping next_word', next_word )
                             continue
@@ -206,6 +250,8 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
 
                         Pref.select_word_undo.append( 'next' )
                         Pref.select_next_word_skipped.append( next_word.end() )
+
+                        Pref.selected_last_word = next_word
                         break;
 
                 if next_word == word_regions[-1]:
@@ -249,6 +295,9 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
                     # print( 'previous_word_end', previous_word.end(), 'first_word_end', first_word_end, view.substr(previous_word) )
                     if previous_word.begin() < first_word_end and previous_word.begin() < Pref.select_previous_word_skipped[-1]:
 
+                        if Pref.selected_first_word is None:
+                            Pref.selected_first_word = previous_word
+
                         if not previous_word.empty() and selections.contains( previous_word ):
                             # print( 'skipping previous_word', previous_word )
                             continue
@@ -258,6 +307,8 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
 
                         Pref.select_word_undo.append( 'previous' )
                         Pref.select_previous_word_skipped.append( previous_word.begin() )
+
+                        Pref.selected_last_word = previous_word
                         break;
 
                 if previous_word == word_regions[0]:
@@ -308,13 +359,11 @@ class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
 
 class WordHighlightListener(sublime_plugin.EventListener):
 
-    def on_text_command(self, window, command_name, args):
+    def on_text_command(self, view, command_name, args):
         # print('command_name', command_name)
+        global g_region_borders
 
-        if command_name in commands_to_reset:
-            clear_line_skipping()
-
-        elif command_name == 'soft_undo':
+        if command_name == 'soft_undo':
 
             if Pref.select_word_undo:
                 stack_type = Pref.select_word_undo.pop()
@@ -336,6 +385,29 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
                 else:
                     Pref.select_previous_word_skipped.append( elements[0] )
+
+        elif command_name == 'single_selection':
+            clear_line_skipping()
+
+        elif command_name == 'single_selection_first':
+
+            if Pref.selected_first_word is not None:
+                g_region_borders = Pref.selected_first_word
+
+                clear_line_skipping()
+                return ('single_selection_blinker', None)
+
+            clear_line_skipping()
+
+        elif command_name == 'single_selection_last':
+
+            if Pref.selected_last_word is not None:
+                g_region_borders = Pref.selected_last_word
+
+                clear_line_skipping()
+                return ('single_selection_blinker', None)
+
+            clear_line_skipping()
 
     def on_query_context(self, view, key, operator, operand, match_all):
 
@@ -381,6 +453,9 @@ def clear_line_skipping():
 
     Pref.select_word_undo.clear()
     Pref.select_word_redo.clear()
+
+    Pref.selected_first_word = None
+    Pref.selected_last_word = None
 
     Pref.select_next_word_skipped = [ 0 ]
     Pref.select_previous_word_skipped = [ sys.maxsize ]
