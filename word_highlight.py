@@ -19,6 +19,7 @@ class Pref:
     timing                         = time.time()
     enabled                        = True
     is_file_limit_reached          = False
+    is_on_whole_word_mode          = False
     prev_selections                = None
     prev_regions                   = None
 
@@ -168,6 +169,9 @@ class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
         view = self.view
         selections = view.sel()
 
+        if not view.has_non_empty_selection_region():
+            Pref.is_on_whole_word_mode = True
+
         # print( 'selections', selections )
         if selections:
             word_regions = view.get_regions("HighlightWordsOnSelection")
@@ -204,6 +208,9 @@ class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         selections = view.sel()
+
+        if not view.has_non_empty_selection_region():
+            Pref.is_on_whole_word_mode = True
 
         # print( 'selections', selections )
         if selections:
@@ -352,6 +359,7 @@ def clear_line_skipping():
     Pref.select_next_word_skipped = [ 0 ]
     Pref.select_previous_word_skipped = [ sys.maxsize ]
 
+    Pref.is_on_whole_word_mode = False
     Pref.select_next_word_last_word = False
     Pref.select_previous_word_last_word = False
 
@@ -451,7 +459,7 @@ def find_regions(view, regions, string, limited_size, is_selection_empty):
 
     # to to to too
     if Pref.non_word_characters(settings):
-        if Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
+        if Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty or Pref.is_on_whole_word_mode:
             search = r'\b'+escape_regex(string)+r'\b'
 
         else:
