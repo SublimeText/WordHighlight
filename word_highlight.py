@@ -432,6 +432,9 @@ class WordHighlightListener(sublime_plugin.EventListener):
             if 'event' in args:
                 clear_line_skipping()
 
+        elif command_name == 'move':
+            clear_line_skipping()
+
     def on_query_context(self, view, key, operator, operand, match_all):
 
         if key == 'is_highlight_words_on_selection_working':
