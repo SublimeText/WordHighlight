@@ -1,15 +1,34 @@
 [
 	{ "keys": ["alt+enter"], "command": "select_highlighted_words", "context":
 		[
-			{ "key": "setting.highlight_words_on_selection.when_selection_is_empty" },
 			{ "key": "setting.is_widget", "operator": "equal", "operand": false },
+			{ "key": "is_highlight_words_on_selection_working" },
 		]
 	},
-	{ "keys": ["alt+enter"], "command": "select_highlighted_words", "context":
+
+	{ "keys": ["ctrl+d"], "command": "select_highlighted_next_word", "context":
 		[
-			{ "key": "setting.highlight_words_on_selection.when_selection_is_empty", "operator": "equal", "operand": false },
-			{ "key": "selection_empty", "operator": "equal", "operand": false },
 			{ "key": "setting.is_widget", "operator": "equal", "operand": false },
+			{ "key": "is_highlight_words_on_selection_working" },
+		]
+	},
+	{ "keys": ["ctrl+k", "ctrl+d"], "command": "select_highlighted_skip_next_word", "context":
+		[
+			{ "key": "setting.is_widget", "operator": "equal", "operand": false },
+			{ "key": "is_highlight_words_on_selection_working" },
+		]
+	},
+
+	{ "keys": ["alt+d"], "command": "select_highlighted_previous_word", "context":
+		[
+			{ "key": "setting.is_widget", "operator": "equal", "operand": false },
+			{ "key": "is_highlight_words_on_selection_working" },
+		]
+	},
+	{ "keys": ["ctrl+q", "ctrl+d"], "command": "select_highlighted_skip_previous_word", "context":
+		[
+			{ "key": "setting.is_widget", "operator": "equal", "operand": false },
+			{ "key": "is_highlight_words_on_selection_working" },
 		]
 	},
 ]
