@@ -315,7 +315,10 @@ class WordHighlightListener(sublime_plugin.EventListener):
     def on_text_command(self, window, command_name, args):
         # print('command_name', command_name)
 
-        if command_name == 'soft_undo':
+        if command_name in commands_to_reset:
+            clear_line_skipping()
+
+        elif command_name == 'soft_undo':
 
             if Pref.select_word_undo:
                 stack_type = Pref.select_word_undo.pop()
@@ -337,12 +340,6 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
                 else:
                     Pref.select_previous_word_skipped.append( elements[0] )
-
-    def on_window_command(self, window, command_name, args):
-        # print('command_name', command_name)
-
-        if command_name in commands_to_reset:
-            clear_line_skipping()
 
     def on_query_context(self, view, key, operator, operand, match_all):
 
@@ -381,6 +378,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
 
 def clear_line_skipping():
+    # print('Reseting...')
     Pref.select_word_undo.clear()
     Pref.select_word_redo.clear()
 
