@@ -7,8 +7,6 @@ import sublime
 import sublime_plugin
 
 g_sleepEvent = threading.Event()
-g_correct_view = None
-g_region_borders = None
 g_is_already_running = False
 
 
@@ -22,6 +20,8 @@ class Pref:
     prev_selections                = None
     prev_regions                   = None
 
+    correct_view                   = None
+    region_borders                 = None
     selected_first_word            = None
     selected_last_word             = None
 
@@ -113,17 +113,16 @@ def configure_main_thread():
 
 
 def wh_loop():
-    global g_correct_view
 
     while True:
         # Stops the thread when the plugin is reloaded or unloaded
         if not g_is_already_running:
             break
 
-        if g_correct_view:
-            view = g_correct_view
+        if Pref.correct_view:
+            view = Pref.correct_view
 
-            g_correct_view = None
+            Pref.correct_view = None
             highlight_occurences( view )
 
         # Reset the internal flag to false. Subsequently, threads calling wait() will block until set()
@@ -156,30 +155,30 @@ class SingleSelectionBlinkerCommand(sublime_plugin.TextCommand):
         selections = view.sel()
 
         def run_blinking_focus():
-            force_focus( view, g_region_borders )
+            force_focus( view, Pref.region_borders )
             view.run_command( "single_selection_blinker_helper" )
 
         selections.clear()
-        sublime_plugin.sublime.status_message( 'Selection set to %s' % view.substr( g_region_borders ) )
+        sublime_plugin.sublime.status_message( 'Selection set to %s' % view.substr( Pref.region_borders ) )
 
         # view.run_command( "move", {"by": "characters", "forward": False} )
-        # print( "SingleSelectionLast, Selecting last:", g_region_borders )
+        # print( "SingleSelectionLast, Selecting last:", Pref.region_borders )
         sublime.set_timeout( run_blinking_focus, 200 )
-        force_focus( view, g_region_borders )
+        force_focus( view, Pref.region_borders )
 
 
 class SingleSelectionBlinkerHelperCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
-        # print( 'Calling Selection Last Helper... ', g_region_borders )
+        # print( 'Calling Selection Last Helper... ', Pref.region_borders )
         view = self.view
         selections = view.sel()
 
-        force_focus( view, g_region_borders )
+        force_focus( view, Pref.region_borders )
         selections.clear()
 
-        selections.add( g_region_borders )
-        force_focus( view, g_region_borders )
+        selections.add( Pref.region_borders )
+        force_focus( view, Pref.region_borders )
 
 
 class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.TextCommand):
@@ -361,7 +360,6 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
     def on_text_command(self, view, command_name, args):
         # print('command_name', command_name)
-        global g_region_borders
 
         if command_name == 'soft_undo':
 
@@ -392,7 +390,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
         elif command_name == 'single_selection_first':
 
             if Pref.selected_first_word is not None:
-                g_region_borders = Pref.selected_first_word
+                Pref.region_borders = Pref.selected_first_word
 
                 clear_line_skipping()
                 return ('single_selection_blinker', None)
@@ -402,7 +400,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
         elif command_name == 'single_selection_last':
 
             if Pref.selected_last_word is not None:
-                g_region_borders = Pref.selected_last_word
+                Pref.region_borders = Pref.selected_last_word
 
                 clear_line_skipping()
                 return ('single_selection_blinker', None)
@@ -440,10 +438,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
             view = active_window.active_view()
 
         if view and Pref.enabled and not is_widget:
-            global g_correct_view
-            g_correct_view = view
-
-            # print( "view:", view )
+            Pref.correct_view = view
             g_sleepEvent.set()
 
 
