@@ -152,7 +152,7 @@ def force_focus(view, region_borders):
     view.show( region_borders )
 
 
-class SingleSelectionBlinkerCommand(sublime_plugin.TextCommand):
+class WordHighlightOnSelectionSingleSelectionBlinkerCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
         view = self.view
@@ -160,29 +160,27 @@ class SingleSelectionBlinkerCommand(sublime_plugin.TextCommand):
 
         def run_blinking_focus():
             force_focus( view, Pref.region_borders )
-            view.run_command( "single_selection_blinker_helper" )
+            view.run_command( "word_highlight_on_selection_single_selection_blinker_helper" )
 
         selections.clear()
+        selections.add( Pref.region_borders.end() )
         sublime_plugin.sublime.status_message( 'Selection set to %s' % view.substr( Pref.region_borders ) )
 
         # view.run_command( "move", {"by": "characters", "forward": False} )
         # print( "SingleSelectionLast, Selecting last:", Pref.region_borders )
-        sublime.set_timeout( run_blinking_focus, 200 )
+        sublime.set_timeout( run_blinking_focus, 400 )
         force_focus( view, Pref.region_borders )
 
 
-class SingleSelectionBlinkerHelperCommand(sublime_plugin.TextCommand):
+class WordHighlightOnSelectionSingleSelectionBlinkerHelperCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
         # print( 'Calling Selection Last Helper... ', Pref.region_borders )
         view = self.view
         selections = view.sel()
 
-        force_focus( view, Pref.region_borders )
         selections.clear()
-
         selections.add( Pref.region_borders )
-        force_focus( view, Pref.region_borders )
 
 
 class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.TextCommand):
@@ -397,7 +395,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
                 Pref.region_borders = Pref.selected_first_word
 
                 clear_line_skipping()
-                return ('single_selection_blinker', None)
+                return ('word_highlight_on_selection_single_selection_blinker', None)
 
             clear_line_skipping()
 
@@ -407,7 +405,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
                 Pref.region_borders = Pref.selected_last_word
 
                 clear_line_skipping()
-                return ('single_selection_blinker', None)
+                return ('word_highlight_on_selection_single_selection_blinker', None)
 
             clear_line_skipping()
 
