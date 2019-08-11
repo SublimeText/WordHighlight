@@ -37,7 +37,7 @@ class Pref:
 
     @classmethod
     def color_scope_name(cls, settings):
-        return settings.get( cls.p + 'color_scope_name', "comment" )
+        return settings.get( cls.p + 'color_scope_name', 'comment' )
 
     @classmethod
     def case_sensitive(cls, settings):
@@ -147,7 +147,7 @@ class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.TextCommand):
         view = self.view
 
         if not Pref.enabled:
-            view.erase_regions("HighlightWordsOnSelection")
+            view.erase_regions( 'HighlightWordsOnSelection' )
 
         else:
             highlight_occurences(view)
@@ -158,7 +158,7 @@ class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.TextCommand):
 
 class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        wh = self.view.get_regions("HighlightWordsOnSelection")
+        wh = self.view.get_regions( 'HighlightWordsOnSelection' )
 
         for w in wh:
             self.view.sel().add(w)
@@ -174,7 +174,7 @@ class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
 
         # print( 'selections', selections )
         if selections:
-            word_regions = view.get_regions("HighlightWordsOnSelection")
+            word_regions = view.get_regions( 'HighlightWordsOnSelection' )
 
             if word_regions:
                 # print( 'select_next_word_last_word', Pref.select_next_word_last_word, Pref.select_next_word_skipped )
@@ -197,7 +197,7 @@ class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
                         break;
 
                 if next_word == word_regions[-1]:
-                    # print('Triggering FIX...')
+                    # print( "Triggering FIX..." )
                     Pref.select_next_word_last_word = True
 
                     Pref.select_word_undo.append( 'next' )
@@ -214,7 +214,7 @@ class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
 
         # print( 'selections', selections )
         if selections:
-            word_regions = view.get_regions("HighlightWordsOnSelection")
+            word_regions = view.get_regions( 'HighlightWordsOnSelection' )
 
             if word_regions:
                 # print( 'select_previous_word_last_word', Pref.select_previous_word_last_word, Pref.select_previous_word_skipped )
@@ -237,7 +237,7 @@ class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
                         break;
 
                 if previous_word == word_regions[0]:
-                    # print('Triggering FIX...')
+                    # print( "Triggering FIX..." )
                     Pref.select_previous_word_last_word = True
 
                     Pref.select_word_undo.append( 'previous' )
@@ -250,7 +250,7 @@ class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
         selections = view.sel()
 
         if selections and len(selections) > 1:
-            word_regions = view.get_regions("HighlightWordsOnSelection")
+            word_regions = view.get_regions( 'HighlightWordsOnSelection' )
             Pref.select_word_undo.append( 'next' )
 
             if selections[-1] == word_regions[-1]:
@@ -269,7 +269,7 @@ class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
         selections = view.sel()
 
         if selections and len(selections) > 1:
-            word_regions = view.get_regions("HighlightWordsOnSelection")
+            word_regions = view.get_regions( 'HighlightWordsOnSelection' )
             Pref.select_word_undo.append( 'previous' )
 
             if selections[0] == word_regions[0]:
@@ -318,8 +318,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
     def on_query_context(self, view, key, operator, operand, match_all):
 
-        if key == "is_highlight_words_on_selection_working":
-            return not Pref.is_file_limit_reached and view.get_regions("HighlightWordsOnSelection")
+        if key == 'is_highlight_words_on_selection_working':
+            return not Pref.is_file_limit_reached and view.get_regions( 'HighlightWordsOnSelection' )
 
     def on_activated(self, view):
         # Pref.prev_selections = None
@@ -327,7 +327,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
         if not view.is_loading():
 
             if not Pref.enabled:
-                view.erase_regions("HighlightWordsOnSelection")
+                view.erase_regions( 'HighlightWordsOnSelection' )
 
     def on_selection_modified(self, view):
         # print('on_selection_modified', view.substr(sublime.Region(0, 10)))
@@ -372,8 +372,8 @@ def highlight_occurences(view):
         clear_line_skipping()
 
         if not Pref.when_selection_is_empty(settings):
-            view.erase_status("HighlightWordsOnSelection")
-            view.erase_regions("HighlightWordsOnSelection")
+            view.erase_status( 'HighlightWordsOnSelection' )
+            view.erase_regions( 'HighlightWordsOnSelection' )
             Pref.prev_regions = None
             Pref.prev_selections = None
             return
@@ -393,12 +393,12 @@ def highlight_occurences(view):
     else:
         limited_size = True
 
-    # print( 'running'+ str(time.time()) )
+    # print( 'running', str(time.time()) )
     regions = []
     processedWords = []
     occurrencesMessage = []
     occurrencesCount = 0
-    word_separators = settings.get('word_separators')
+    word_separators = settings.get( 'word_separators' )
 
     for sel in view.sel():
 
@@ -438,17 +438,17 @@ def highlight_occurences(view):
         occurrences = len(regions)-occurrencesCount;
 
         if occurrences > 0:
-            occurrencesMessage.append('"' + string + '" '+str(occurrences) +' ')
+            occurrencesMessage.append( '"' + string + '" ' + str(occurrences) + ' ' )
             occurrencesCount = occurrencesCount + occurrences
 
     if Pref.prev_regions != regions:
-        view.erase_regions("HighlightWordsOnSelection")
+        view.erase_regions( 'HighlightWordsOnSelection' )
 
         if regions:
-            view.add_regions("HighlightWordsOnSelection", regions, Pref.color_scope_name(settings), Pref.icon_type_on_gutter(settings) if Pref.mark_occurrences_on_gutter(settings) else "", sublime.DRAW_NO_FILL if Pref.draw_outlined(settings) else 0)
+            view.add_regions( 'HighlightWordsOnSelection', regions, Pref.color_scope_name(settings), Pref.icon_type_on_gutter(settings) if  Pref.mark_occurrences_on_gutter(settings) else "", sublime.DRAW_NO_FILL if Pref.draw_outlined(settings) else 0)
 
         else:
-            view.erase_status("HighlightWordsOnSelection")
+            view.erase_status( 'HighlightWordsOnSelection' )
 
         Pref.prev_regions = regions
 
@@ -460,7 +460,7 @@ def find_regions(view, regions, string, limited_size, is_selection_empty):
     # to to to too
     if Pref.non_word_characters(settings):
         if Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty or Pref.is_on_whole_word_mode:
-            search = r'\b'+escape_regex(string)+r'\b'
+            search = r'\b' + escape_regex(string) + r'\b'
 
         else:
             search = escape_regex(string)
@@ -469,10 +469,10 @@ def find_regions(view, regions, string, limited_size, is_selection_empty):
         # It seems as if \b doesn't pay attention to word_separators, but
         # \w does. Hence we use lookaround assertions instead of \b.
         if Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
-            search = r'\b(?<!\w)'+escape_regex(string)+r'(?!\w)\b'
+            search = r'\b(?<!\w)' + escape_regex(string) + r'(?!\w)\b'
 
         else:
-            search = r'(?<!\w)'+escape_regex(string)+r'(?!\w)'
+            search = r'(?<!\w)' + escape_regex(string) + r'(?!\w)'
 
     if not limited_size:
         regions += view.find_all(search, Pref.case_sensitive(settings))
