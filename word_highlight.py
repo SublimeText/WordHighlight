@@ -66,6 +66,10 @@ class Pref:
         return bool( settings.get( cls.p + 'copy_selected_text_into_find_panel', True ) )
 
     @classmethod
+    def blink_selection_on_single_selection(cls, settings):
+        return bool( settings.get( cls.p + 'blink_selection_on_single_selection', True ) )
+
+    @classmethod
     def when_selection_is_empty(cls, settings):
         return bool( settings.get( cls.p + 'when_selection_is_empty', False ) )
 
@@ -161,19 +165,25 @@ class WordHighlightOnSelectionSingleSelectionBlinkerCommand(sublime_plugin.TextC
     def run(self, edit, message):
         view = self.view
         selections = view.sel()
+        settings = view.settings()
 
         def run_blinking_focus():
             force_focus( view, Pref.region_borders )
             view.run_command( "word_highlight_on_selection_single_selection_blinker_helper" )
 
         selections.clear()
-        selections.add( Pref.region_borders.end() )
         sublime_plugin.sublime.status_message( 'Selection set to %s %s' % ( message, view.substr( Pref.region_borders )[:100] ) )
 
         # view.run_command( "move", {"by": "characters", "forward": False} )
         # print( "SingleSelectionLast, Selecting last:", Pref.region_borders )
-        sublime.set_timeout( run_blinking_focus, 250 )
-        force_focus( view, Pref.region_borders )
+        if Pref.blink_selection_on_single_selection( settings ):
+            selections.add( Pref.region_borders.end() )
+            sublime.set_timeout( run_blinking_focus, 250 )
+            force_focus( view, Pref.region_borders )
+
+        else:
+            selections.add( Pref.region_borders )
+            force_focus( view, Pref.region_borders )
 
 
 class WordHighlightOnSelectionSingleSelectionBlinkerHelperCommand(sublime_plugin.TextCommand):
