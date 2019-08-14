@@ -535,28 +535,31 @@ def highlight_occurences(view):
 
     for sel in view.sel():
 
-        if Pref.when_selection_is_empty(settings) and sel.empty():
-            string = view.substr(view.word(sel)).strip()
+        if sel.empty():
 
-            if string not in processedWords:
-                processedWords.append(string)
+            if Pref.when_selection_is_empty(settings):
+                string = view.substr(view.word(sel)).strip()
 
-                if string and all([not c in word_separators for c in string]):
+                if string not in processedWords:
+                    processedWords.append(string)
+                    is_word = all([not c in word_separators for c in string])
+
+                    if string and is_word:
                         regions = find_regions(view, regions, string, limited_size, True)
 
-                if not Pref.word_under_cursor_when_selection_is_empty(settings):
+                    if not Pref.word_under_cursor_when_selection_is_empty(settings):
 
-                    for s in view.sel():
-                        regions = [r for r in regions if not r.contains(s)]
+                        for s in view.sel():
+                            regions = [r for r in regions if not r.contains(s)]
 
-        elif not sel.empty() and Pref.non_word_characters(settings):
+        elif Pref.non_word_characters(settings):
             string = view.substr(sel)
 
             if string and string not in processedWords:
                 processedWords.append(string)
                 regions = find_regions(view, regions, string, limited_size, False)
 
-        elif not sel.empty():
+        else:
             word = view.word(sel)
 
             if word.end() == sel.end() and word.begin() == sel.begin():
