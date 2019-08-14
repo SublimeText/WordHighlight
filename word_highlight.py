@@ -589,6 +589,7 @@ def highlight_occurences(view):
 
     elif not regions:
         view.erase_status( 'HighlightWordsOnSelection' )
+        view.erase_regions( 'HighlightWordsOnSelection' )
 
 
 def find_regions(view, regions, string, limited_size, is_selection_empty):
