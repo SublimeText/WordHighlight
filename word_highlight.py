@@ -575,15 +575,20 @@ def highlight_occurences(view):
             occurrencesCount = occurrencesCount + occurrences
 
     if Pref.prev_regions != regions:
+        Pref.prev_regions = regions
         view.erase_regions( 'HighlightWordsOnSelection' )
 
         if regions:
-            view.add_regions( 'HighlightWordsOnSelection', regions, Pref.color_scope_name(settings), Pref.icon_type_on_gutter(settings) if  Pref.mark_occurrences_on_gutter(settings) else "", sublime.DRAW_NO_FILL if Pref.draw_outlined(settings) else 0)
+            view.add_regions( 'HighlightWordsOnSelection', regions,
+                    Pref.color_scope_name( settings ), Pref.icon_type_on_gutter( settings )
+                            if Pref.mark_occurrences_on_gutter( settings ) else
+                    "", sublime.DRAW_NO_FILL if Pref.draw_outlined( settings ) else 0 )
 
         else:
             view.erase_status( 'HighlightWordsOnSelection' )
 
-        Pref.prev_regions = regions
+    elif not regions:
+        view.erase_status( 'HighlightWordsOnSelection' )
 
 
 def find_regions(view, regions, string, limited_size, is_selection_empty):
