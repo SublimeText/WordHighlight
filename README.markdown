@@ -6,6 +6,17 @@ optionally, highlights all copies of a word which currently has the insertion cu
 
 Additionally you may select all these words highlighted with <kbd>ALT</kbd>+<kbd>ENTER</kbd>, or also may append to the selection these words one by one similar to <kbd>CTRL</kbd>+<kbd>D</kbd>.
 
+If you would like to use the settings:
+```js
+    "highlight_words_on_selection.copy_selected_text_into_find_panel": true,
+    "highlight_words_on_selection.blink_selection_on_single_selection": true,
+```
+
+You also need to install these packages:
+1. https://github.com/evandrocoan/FixedToggleFindPanel
+1. https://github.com/evandrocoan/ClearCursorsCarets
+
+
 Install
 -------
 
