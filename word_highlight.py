@@ -192,7 +192,7 @@ class WordHighlightOnSelectionSingleSelectionBlinkerCommand(sublime_plugin.TextC
             view.run_command( "word_highlight_on_selection_single_selection_blinker_helper" )
 
         selections.clear()
-        sublime_plugin.sublime.status_message( 'Selection set to %s %s' % ( message, view.substr( Pref.region_borders )[:100] ) )
+        sublime.status_message( "Selection set to %s %s" % ( message, view.substr( Pref.region_borders )[:100] ) )
 
         # view.run_command( "move", {"by": "characters", "forward": False} )
         # print( "SingleSelectionLast, Selecting last:", Pref.region_borders )
@@ -255,6 +255,7 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
 
         # print( 'selections', [s for s in selections] )
         if selections:
+            has_selected_new_word = False
             word_regions = view.get_regions( 'HighlightWordsOnSelection' )
 
             if word_regions:
@@ -280,28 +281,36 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
                             Pref.selected_first_word = next_word
 
                             if copy_selected_text_into_find_panel:
-                                view.window().run_command( "fixed_toggle_find_panel",
-                                        { "command": "insert", "args": { "characters": view.substr( next_word ) } } )
+                                view.window().run_command( "fixed_toggle_find_panel", {
+                                        "command": "insert",
+                                        "skip": True,
+                                        "args": { "characters": view.substr( next_word ) }
+                                        } )
 
                         if not next_word.empty() and selections.contains( next_word ):
                             # print( 'skipping next_word', next_word )
                             continue
 
-                        selections.add(next_word)
-                        view.show(next_word)
+                        selections.add( next_word )
+                        view.show( next_word )
 
                         Pref.select_word_undo.append( 'next' )
                         Pref.select_next_word_skipped.append( next_word.end() )
 
+                        has_selected_new_word = True
                         Pref.selected_last_word = next_word
                         break;
 
+                # fooo fooo fooo
                 if next_word == word_regions[-1]:
-                    # print( "Triggering FIX..." )
+                    sublime.status_message( "Reached the last word '%s' on the file!" % view.substr( next_word )[:100] )
                     Pref.select_next_word_last_word = True
 
                     Pref.select_word_undo.append( 'next' )
                     Pref.select_next_word_skipped.append( word_regions[0].begin() )
+
+            if not has_selected_new_word or len( word_regions ) == len( selections ):
+                sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( next_word )[:100] )
 
 
 class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
@@ -319,6 +328,7 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
 
         # print( 'selections', [s for s in selections] )
         if selections:
+            has_selected_new_word = False
             word_regions = view.get_regions( 'HighlightWordsOnSelection' )
 
             if word_regions:
@@ -344,28 +354,35 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
                             Pref.selected_first_word = previous_word
 
                             if copy_selected_text_into_find_panel:
-                                view.window().run_command( "fixed_toggle_find_panel",
-                                        { "command": "insert", "args": { "characters": view.substr( previous_word ) } } )
+                                view.window().run_command( "fixed_toggle_find_panel", {
+                                        "command": "insert",
+                                        "skip": True,
+                                        "args": { "characters": view.substr( previous_word ) }
+                                        } )
 
                         if not previous_word.empty() and selections.contains( previous_word ):
                             # print( 'skipping previous_word', previous_word )
                             continue
 
-                        selections.add(previous_word)
-                        view.show(previous_word)
+                        selections.add( previous_word )
+                        view.show( previous_word )
 
                         Pref.select_word_undo.append( 'previous' )
                         Pref.select_previous_word_skipped.append( previous_word.begin() )
 
+                        has_selected_new_word = True
                         Pref.selected_last_word = previous_word
                         break;
 
                 if previous_word == word_regions[0]:
-                    # print( "Triggering FIX..." )
+                    sublime.status_message( "Reached the first word '%s' on the file!" % view.substr( previous_word )[:100] )
                     Pref.select_previous_word_last_word = True
 
                     Pref.select_word_undo.append( 'previous' )
                     Pref.select_previous_word_skipped.append( word_regions[-1].end() )
+
+            if not has_selected_new_word or len( word_regions ) == len( selections ):
+                sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( previous_word )[:100] )
 
 
 class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
