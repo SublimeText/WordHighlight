@@ -160,12 +160,32 @@ def force_focus(view, region_borders):
     view.show( region_borders )
 
 
+def fix_selection_aligment(selections, region_borders):
+
+    if selections:
+        last_selection = None
+
+        for selection in sorted( selections, key=lambda item: item.begin() ):
+            # print('selection.begin', selection.begin())
+
+            if selection.begin() > region_borders.begin():
+
+                if last_selection is None:
+                    last_selection = selection
+                break
+
+            last_selection = selection
+
+        return last_selection
+
+
 class WordHighlightOnSelectionSingleSelectionBlinkerCommand(sublime_plugin.TextCommand):
 
     def run(self, edit, message):
         view = self.view
         selections = view.sel()
         settings = view.settings()
+        Pref.region_borders = fix_selection_aligment( selections, Pref.region_borders )
 
         def run_blinking_focus():
             force_focus( view, Pref.region_borders )
