@@ -567,10 +567,10 @@ def highlight_occurences(view):
         Pref.prev_selections = prev_selections
 
     if view.size() <= Pref.file_size_limit(settings):
-        limited_size = False
+        Pref.is_file_limit_reached = False
 
     else:
-        limited_size = True
+        Pref.is_file_limit_reached = True
 
     # print( 'running', str(time.time()) )
     word_regions = []
@@ -591,7 +591,7 @@ def highlight_occurences(view):
                     is_word = all([not c in word_separators for c in string])
 
                     if string and is_word:
-                        word_regions = find_regions(view, word_regions, string, limited_size, True)
+                        word_regions = find_regions(view, word_regions, string, True)
 
                     if not Pref.word_under_cursor_when_selection_is_empty(settings):
 
@@ -603,7 +603,7 @@ def highlight_occurences(view):
 
             if string and string not in processedWords:
                 processedWords.append(string)
-                word_regions = find_regions(view, word_regions, string, limited_size, False)
+                word_regions = find_regions(view, word_regions, string, False)
 
         else:
             word = view.word(sel)
@@ -615,7 +615,7 @@ def highlight_occurences(view):
                     processedWords.append(string)
 
                     if string and all([not c in word_separators for c in string]):
-                            word_regions = find_regions(view, word_regions, string, limited_size, False)
+                            word_regions = find_regions(view, word_regions, string, False)
 
         occurrences = len(word_regions)-occurrencesCount;
 
@@ -643,9 +643,8 @@ def highlight_occurences(view):
         view.erase_regions( g_regionkey )
 
 
-def find_regions(view, word_regions, string, limited_size, is_selection_empty):
+def find_regions(view, word_regions, string, is_selection_empty):
     settings = view.settings()
-    Pref.is_file_limit_reached = False
 
     # to to to too
     if Pref.non_word_characters(settings):
@@ -664,7 +663,7 @@ def find_regions(view, word_regions, string, limited_size, is_selection_empty):
         else:
             search = r'(?<!\w)' + escape_regex(string) + r'(?!\w)'
 
-    if not limited_size:
+    if not Pref.is_file_limit_reached:
         word_regions += view.find_all(search, Pref.case_sensitive(settings))
 
     else:
@@ -682,7 +681,6 @@ def find_regions(view, word_regions, string, limited_size, is_selection_empty):
                 word_regions.append(region)
 
                 if region.end() > end:
-                    Pref.is_file_limit_reached = True
                     break
 
                 else:
