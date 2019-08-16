@@ -9,6 +9,9 @@ import sublime_plugin
 g_sleepEvent = threading.Event()
 g_is_already_running = False
 
+g_regionkey = "HighlightWordsOnSelection"
+g_statusbarkey = "HighlightWordsOnSelection"
+
 
 class Pref:
     p = 'highlight_words_on_selection.'
@@ -223,7 +226,7 @@ class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.TextCommand):
         view = self.view
 
         if not Pref.enabled:
-            view.erase_regions( 'HighlightWordsOnSelection' )
+            view.erase_regions( g_regionkey )
 
         else:
             highlight_occurences(view)
@@ -234,10 +237,12 @@ class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.TextCommand):
 
 class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        wh = self.view.get_regions( 'HighlightWordsOnSelection' )
+        view = self.view
+        wh = view.get_regions( g_regionkey )
+        selections = view.sel()
 
         for w in wh:
-            self.view.sel().add(w)
+            selections.add(w)
 
 
 class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
@@ -256,7 +261,7 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
         # print( 'selections', [s for s in selections] )
         if selections:
             has_selected_new_word = False
-            word_regions = view.get_regions( 'HighlightWordsOnSelection' )
+            word_regions = view.get_regions( g_regionkey )
 
             if word_regions:
                 settings = view.settings()
@@ -301,7 +306,6 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
                         Pref.selected_last_word = next_word
                         break;
 
-                # fooo fooo fooo
                 if next_word == word_regions[-1]:
                     sublime.status_message( "Reached the last word '%s' on the file!" % view.substr( next_word )[:100] )
                     Pref.select_next_word_last_word = True
@@ -311,6 +315,8 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
 
             if not has_selected_new_word or len( word_regions ) == len( selections ):
                 sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( next_word )[:100] )
+
+            view.set_status( g_statusbarkey, message = "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
 
 
 class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
@@ -329,7 +335,7 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
         # print( 'selections', [s for s in selections] )
         if selections:
             has_selected_new_word = False
-            word_regions = view.get_regions( 'HighlightWordsOnSelection' )
+            word_regions = view.get_regions( g_regionkey )
 
             if word_regions:
                 settings = view.settings()
@@ -384,6 +390,8 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
             if not has_selected_new_word or len( word_regions ) == len( selections ):
                 sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( previous_word )[:100] )
 
+            view.set_status( g_statusbarkey, "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
+
 
 class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -391,7 +399,7 @@ class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
         selections = view.sel()
 
         if selections and len(selections) > 1:
-            word_regions = view.get_regions( 'HighlightWordsOnSelection' )
+            word_regions = view.get_regions( g_regionkey )
             Pref.select_word_undo.append( 'next' )
 
             if selections[-1] == word_regions[-1]:
@@ -410,7 +418,7 @@ class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
         selections = view.sel()
 
         if selections and len(selections) > 1:
-            word_regions = view.get_regions( 'HighlightWordsOnSelection' )
+            word_regions = view.get_regions( g_regionkey )
             Pref.select_word_undo.append( 'previous' )
 
             if selections[0] == word_regions[0]:
@@ -452,40 +460,40 @@ class WordHighlightListener(sublime_plugin.EventListener):
                     Pref.select_previous_word_skipped.append( elements[0] )
 
         elif command_name == 'single_selection':
-            clear_line_skipping()
+            clear_line_skipping( view )
 
         elif command_name == 'single_selection_first':
 
             if Pref.enable_find_under_expand_bug_fixes( view.settings() ) and Pref.selected_first_word is not None:
                 Pref.region_borders = Pref.selected_first_word
 
-                clear_line_skipping()
+                clear_line_skipping( view )
                 return ('word_highlight_on_selection_single_selection_blinker', { "message": "FIRST" })
 
-            clear_line_skipping()
+            clear_line_skipping( view )
 
         elif command_name == 'single_selection_last':
 
             if Pref.enable_find_under_expand_bug_fixes( view.settings() ) and Pref.selected_last_word is not None:
                 Pref.region_borders = Pref.selected_last_word
 
-                clear_line_skipping()
+                clear_line_skipping( view )
                 return ('word_highlight_on_selection_single_selection_blinker', { "message": "LAST" })
 
-            clear_line_skipping()
+            clear_line_skipping( view )
 
         elif command_name == 'drag_select':
 
             if 'event' in args:
-                clear_line_skipping()
+                clear_line_skipping( view )
 
         elif command_name == 'move':
-            clear_line_skipping()
+            clear_line_skipping( view )
 
     def on_query_context(self, view, key, operator, operand, match_all):
 
         if key == 'is_highlight_words_on_selection_working':
-            return not Pref.is_file_limit_reached and view.get_regions( 'HighlightWordsOnSelection' )
+            return not Pref.is_file_limit_reached and view.get_regions( g_regionkey )
 
     def on_activated(self, view):
         # Pref.prev_selections = None
@@ -493,7 +501,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
         if not view.is_loading():
 
             if not Pref.enabled:
-                view.erase_regions( 'HighlightWordsOnSelection' )
+                view.erase_regions( g_regionkey )
 
     def on_selection_modified(self, view):
         if Pref.is_on_word_selection_mode: return
@@ -517,7 +525,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
             g_sleepEvent.set()
 
 
-def clear_line_skipping():
+def clear_line_skipping(view):
     # print('Reseting...')
     Pref.is_on_word_selection_mode = False
 
@@ -539,16 +547,17 @@ def highlight_occurences(view):
 
     # print( "view.has_non_empty_selection_region:", view.has_non_empty_selection_region() )
     if not view.has_non_empty_selection_region():
-        clear_line_skipping()
+        clear_line_skipping( view )
 
         if not Pref.when_selection_is_empty(settings):
-            view.erase_status( 'HighlightWordsOnSelection' )
-            view.erase_regions( 'HighlightWordsOnSelection' )
+            view.erase_status( g_statusbarkey )
+            view.erase_regions( g_regionkey )
             Pref.prev_regions = None
             Pref.prev_selections = None
             return
 
-    prev_selections = str(view.sel())
+    selections = view.sel()
+    prev_selections = str( selections )
 
     # print( "prev_selections:", prev_selections )
     if Pref.prev_selections == prev_selections:
@@ -564,13 +573,13 @@ def highlight_occurences(view):
         limited_size = True
 
     # print( 'running', str(time.time()) )
-    regions = []
+    word_regions = []
     processedWords = []
     occurrencesMessage = []
     occurrencesCount = 0
     word_separators = settings.get( 'word_separators' )
 
-    for sel in view.sel():
+    for sel in selections:
 
         if sel.empty():
 
@@ -582,19 +591,19 @@ def highlight_occurences(view):
                     is_word = all([not c in word_separators for c in string])
 
                     if string and is_word:
-                        regions = find_regions(view, regions, string, limited_size, True)
+                        word_regions = find_regions(view, word_regions, string, limited_size, True)
 
                     if not Pref.word_under_cursor_when_selection_is_empty(settings):
 
-                        for s in view.sel():
-                            regions = [r for r in regions if not r.contains(s)]
+                        for s in selections:
+                            word_regions = [r for r in word_regions if not r.contains(s)]
 
         elif Pref.non_word_characters(settings):
             string = view.substr(sel)
 
             if string and string not in processedWords:
                 processedWords.append(string)
-                regions = find_regions(view, regions, string, limited_size, False)
+                word_regions = find_regions(view, word_regions, string, limited_size, False)
 
         else:
             word = view.word(sel)
@@ -606,33 +615,35 @@ def highlight_occurences(view):
                     processedWords.append(string)
 
                     if string and all([not c in word_separators for c in string]):
-                            regions = find_regions(view, regions, string, limited_size, False)
+                            word_regions = find_regions(view, word_regions, string, limited_size, False)
 
-        occurrences = len(regions)-occurrencesCount;
+        occurrences = len(word_regions)-occurrencesCount;
 
         if occurrences > 0:
             occurrencesMessage.append( '"' + string + '" ' + str(occurrences) + ' ' )
             occurrencesCount = occurrencesCount + occurrences
 
-    if Pref.prev_regions != regions:
-        Pref.prev_regions = regions
+    if Pref.prev_regions != word_regions:
+        Pref.prev_regions = word_regions
         view.erase_regions( 'HighlightWordsOnSelection' )
 
-        if regions:
-            view.add_regions( 'HighlightWordsOnSelection', regions,
+        if word_regions:
+            view.add_regions( 'HighlightWordsOnSelection', word_regions,
                     Pref.color_scope_name( settings ), Pref.icon_type_on_gutter( settings )
                             if Pref.mark_occurrences_on_gutter( settings ) else
                     "", sublime.DRAW_NO_FILL if Pref.draw_outlined( settings ) else 0 )
 
+            view.set_status( g_statusbarkey, "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
+
         else:
-            view.erase_status( 'HighlightWordsOnSelection' )
+            view.erase_status( g_statusbarkey )
 
-    elif not regions:
-        view.erase_status( 'HighlightWordsOnSelection' )
-        view.erase_regions( 'HighlightWordsOnSelection' )
+    elif not word_regions:
+        view.erase_status( g_statusbarkey )
+        view.erase_regions( g_regionkey )
 
 
-def find_regions(view, regions, string, limited_size, is_selection_empty):
+def find_regions(view, word_regions, string, limited_size, is_selection_empty):
     settings = view.settings()
     Pref.is_file_limit_reached = False
 
@@ -654,7 +665,7 @@ def find_regions(view, regions, string, limited_size, is_selection_empty):
             search = r'(?<!\w)' + escape_regex(string) + r'(?!\w)'
 
     if not limited_size:
-        regions += view.find_all(search, Pref.case_sensitive(settings))
+        word_regions += view.find_all(search, Pref.case_sensitive(settings))
 
     else:
         chars = Pref.when_file_size_limit_search_this_num_of_characters(settings)
@@ -668,7 +679,7 @@ def find_regions(view, regions, string, limited_size, is_selection_empty):
             region = view.find(search, from_point)
 
             if region:
-                regions.append(region)
+                word_regions.append(region)
 
                 if region.end() > end:
                     Pref.is_file_limit_reached = True
@@ -680,5 +691,5 @@ def find_regions(view, regions, string, limited_size, is_selection_empty):
             else:
                 break
 
-    return regions
+    return word_regions
 
