@@ -316,7 +316,7 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
             if not has_selected_new_word or len( word_regions ) == len( selections ):
                 sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( next_word )[:100] )
 
-            view.set_status( g_statusbarkey, message = "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
+            view.set_status( g_statusbarkey, "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
 
 
 class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
