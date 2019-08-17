@@ -433,7 +433,7 @@ class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
         view = self.view
         selections = view.sel()
 
-        if selections and len(selections) > 1:
+        if selections:
             word_regions = view.get_regions( g_regionkey )
             Pref.select_word_undo.append( 'next' )
 
@@ -443,8 +443,28 @@ class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
             else:
                 Pref.select_next_word_skipped.append( selections[-1].end() )
 
-            selections.subtract(selections[-1])
+            if len( Pref.select_next_word_skipped ) > 1 and len( selections ) > 1:
+                selections.subtract( selections[-1] )
+                view.run_command( 'select_highlighted_next_word' )
+
+            else:
+                view.run_command( 'select_highlighted_next_word' )
+                sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_next_word_helper', { "counter": 1 } ) )
+
+
+class SelectHighlightedSkipNextWordHelperCommand(sublime_plugin.TextCommand):
+    def run(self, edit, counter):
+        counter -= 1
+        view = self.view
+        selections = view.sel()
+
+        if len( selections ) < 2:
+            if counter < 0: return
             view.run_command( 'select_highlighted_next_word' )
+            sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_next_word_helper', { "counter": counter } ) )
+
+        else:
+            selections.subtract( selections[0] )
 
 
 class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
@@ -452,7 +472,7 @@ class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
         view = self.view
         selections = view.sel()
 
-        if selections and len(selections) > 1:
+        if selections:
             word_regions = view.get_regions( g_regionkey )
             Pref.select_word_undo.append( 'previous' )
 
@@ -462,8 +482,28 @@ class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
             else:
                 Pref.select_previous_word_skipped.append( selections[0].begin() )
 
-            selections.subtract(selections[0])
+            if len( Pref.select_previous_word_skipped ) > 1 and len( selections ) > 1:
+                selections.subtract( selections[0] )
+                view.run_command( 'select_highlighted_previous_word' )
+
+            else:
+                view.run_command( 'select_highlighted_previous_word' )
+                sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_previous_word_helper', { "counter": 1 } ) )
+
+
+class SelectHighlightedSkipPreviousWordHelperCommand(sublime_plugin.TextCommand):
+    def run(self, edit, counter):
+        counter -= 1
+        view = self.view
+        selections = view.sel()
+
+        if len( selections ) < 2:
+            if counter < 0: return
             view.run_command( 'select_highlighted_previous_word' )
+            sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_previous_word_helper', { "counter": counter } ) )
+
+        else:
+            selections.subtract( selections[-1] )
 
 
 class WordHighlightListener(sublime_plugin.EventListener):
