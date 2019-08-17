@@ -111,6 +111,11 @@ def plugin_unloaded():
     # unblocks any thread waiting in a g_sleepEvent.wait() call
     g_sleepEvent.set()
 
+    for window in sublime.windows():
+        for view in window.views():
+            view.erase_status( g_statusbarkey )
+            view.erase_regions( g_regionkey )
+
 
 def configure_main_thread():
     """
