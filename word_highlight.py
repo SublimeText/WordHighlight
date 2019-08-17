@@ -26,7 +26,7 @@ class Pref:
     correct_view                   = None
     region_borders                 = None
     selected_first_word            = None
-    selected_last_word             = None
+    selected_last_word             = []
 
     has_selected_new_word          = False
     select_next_word_last_word     = False
@@ -334,7 +334,7 @@ def run_next_selection_search(view, word_regions, selections, copy_selected_text
             Pref.select_next_word_skipped.append( next_word.end() )
 
             Pref.has_selected_new_word = True
-            Pref.selected_last_word = next_word
+            Pref.selected_last_word.append( next_word )
             break;
 
     return next_word
@@ -417,7 +417,7 @@ def run_previous_selection_search(view, word_regions, selections, copy_selected_
             Pref.select_previous_word_skipped.append( previous_word.begin() )
 
             Pref.has_selected_new_word = True
-            Pref.selected_last_word = previous_word
+            Pref.selected_last_word.append( previous_word )
             break;
 
     return previous_word
@@ -470,18 +470,22 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
             if Pref.select_word_undo:
                 stack_type = Pref.select_word_undo.pop()
+                selected_last_word = Pref.selected_last_word[-1] if Pref.selected_last_word else None
 
                 if stack_type == 'next':
-                    Pref.select_word_redo.append( (Pref.select_next_word_skipped.pop(), 'next') )
+                    Pref.select_word_redo.append( (Pref.select_next_word_skipped.pop(), 'next', selected_last_word) )
 
                 else:
-                    Pref.select_word_redo.append( (Pref.select_previous_word_skipped.pop(), 'previous') )
+                    Pref.select_word_redo.append( (Pref.select_previous_word_skipped.pop(), 'previous', selected_last_word) )
 
         elif command_name == 'soft_redo':
 
             if Pref.select_word_redo:
                 elements = Pref.select_word_redo.pop()
                 Pref.select_word_undo.append( elements[1] )
+
+                if elements[2]:
+                    Pref.selected_last_word.append( elements[2] )
 
                 if elements[1] == 'next':
                     Pref.select_next_word_skipped.append( elements[0] )
@@ -504,8 +508,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
         elif command_name == 'single_selection_last':
 
-            if Pref.enable_find_under_expand_bug_fixes( view.settings() ) and Pref.selected_last_word is not None:
-                Pref.region_borders = Pref.selected_last_word
+            if Pref.enable_find_under_expand_bug_fixes( view.settings() ) and Pref.selected_last_word:
+                Pref.region_borders = Pref.selected_last_word[-1]
 
                 clear_line_skipping( view, keep_whole_word_state=True )
                 return ('word_highlight_on_selection_single_selection_blinker', { "message": "LAST" })
@@ -564,7 +568,7 @@ def clear_line_skipping(view, keep_whole_word_state=False):
     Pref.select_word_redo.clear()
 
     Pref.selected_first_word = None
-    Pref.selected_last_word = None
+    Pref.selected_last_word.clear()
 
     Pref.select_next_word_skipped = [ 0 ]
     Pref.select_previous_word_skipped = [ sys.maxsize ]
