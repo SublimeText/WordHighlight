@@ -246,6 +246,16 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
             selections.add(w)
 
 
+def show_status_bar(view, selections, word_regions):
+    view.set_status(
+            g_statusbarkey, "Selected %s of %s%s occurrences" % (
+                len( selections ),
+                "approximately ~" if Pref.is_file_limit_reached else "",
+                len( word_regions )
+            )
+        )
+
+
 class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
@@ -283,7 +293,7 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
                         if not Pref.has_selected_new_word:
                             run_next_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
-                view.set_status( g_statusbarkey, "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
+                show_status_bar( view, selections, word_regions )
 
 
 def run_next_selection_search(view, word_regions, selections, copy_selected_text_into_find_panel):
@@ -366,7 +376,7 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
                         if not Pref.has_selected_new_word:
                             run_previous_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
-                view.set_status( g_statusbarkey, "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
+                show_status_bar( view, selections, word_regions )
 
 
 def run_previous_selection_search(view, word_regions, selections, copy_selected_text_into_find_panel):
@@ -650,7 +660,7 @@ def highlight_occurences(view):
                             if Pref.mark_occurrences_on_gutter( settings ) else
                     "", sublime.DRAW_NO_FILL if Pref.draw_outlined( settings ) else 0 )
 
-            view.set_status( g_statusbarkey, "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
+            show_status_bar( view, selections, word_regions )
 
         else:
             view.erase_status( g_statusbarkey )
