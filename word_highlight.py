@@ -248,8 +248,6 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        Pref.is_on_word_selection_mode = True
-
         sublime.set_timeout( lambda: view.run_command( 'select_highlighted_next_word_bug_fixer' ), 0 )
 
 
@@ -257,6 +255,9 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         selections = view.sel()
+
+        if not view.has_non_empty_selection_region():
+            Pref.is_on_word_selection_mode = True
 
         # print( 'selections', [s for s in selections] )
         if selections:
@@ -322,8 +323,6 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
 class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        Pref.is_on_word_selection_mode = True
-
         sublime.set_timeout( lambda: view.run_command( 'select_highlighted_previous_word_bug_fixer' ), 0 )
 
 
@@ -331,6 +330,9 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         selections = view.sel()
+
+        if not view.has_non_empty_selection_region():
+            Pref.is_on_word_selection_mode = True
 
         # print( 'selections', [s for s in selections] )
         if selections:
@@ -484,7 +486,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
         elif command_name == 'drag_select':
 
-            if 'event' in args:
+            if not ( 'additive' in args or 'subtractive' in args ):
                 clear_line_skipping( view )
 
         elif command_name == 'move':
@@ -504,8 +506,6 @@ class WordHighlightListener(sublime_plugin.EventListener):
                 view.erase_regions( g_regionkey )
 
     def on_selection_modified(self, view):
-        if Pref.is_on_word_selection_mode: return
-
         # print('on_selection_modified', view.substr(sublime.Region(0, 10)))
         active_window = sublime.active_window()
         panel_has_focus = not view.file_name()
@@ -648,7 +648,8 @@ def find_regions(view, word_regions, string, is_selection_empty):
 
     # to to to too
     if Pref.non_word_characters(settings):
-        if Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
+        if Pref.is_on_word_selection_mode or \
+                Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
             search = r'\b' + escape_regex(string) + r'\b'
 
         else:
@@ -657,7 +658,8 @@ def find_regions(view, word_regions, string, is_selection_empty):
     else:
         # It seems as if \b doesn't pay attention to word_separators, but
         # \w does. Hence we use lookaround assertions instead of \b.
-        if Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
+        if Pref.is_on_word_selection_mode or \
+                Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
             search = r'\b(?<!\w)' + escape_regex(string) + r'(?!\w)\b'
 
         else:
