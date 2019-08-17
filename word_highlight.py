@@ -28,6 +28,7 @@ class Pref:
     selected_first_word            = None
     selected_last_word             = None
 
+    has_selected_new_word          = False
     select_next_word_last_word     = False
     select_previous_word_last_word = False
 
@@ -261,63 +262,71 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
 
         # print( 'selections', [s for s in selections] )
         if selections:
-            has_selected_new_word = False
+            Pref.has_selected_new_word = False
             word_regions = view.get_regions( g_regionkey )
 
             if word_regions:
                 settings = view.settings()
                 copy_selected_text_into_find_panel = Pref.copy_selected_text_into_find_panel( settings )
+                next_word = run_next_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
-                # print( 'select_next_word_last_word', Pref.select_next_word_last_word, Pref.select_next_word_skipped )
-                if Pref.select_next_word_last_word:
-                    last_word = word_regions[0]
-                    last_word_end = last_word.begin() - 1
+                if len( word_regions ) == len( selections ):
+                    sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( next_word )[:100] )
 
-                else:
-                    last_word = selections[0]
-                    last_word_end = last_word.end() - 1
-
-                # print( 'last_word_end', last_word_end, view.substr( last_word ), 'select_next_word_skipped', Pref.select_next_word_skipped, 'word_regions', word_regions )
-                for next_word in word_regions:
-
-                    # print( 'next_word_end', next_word.end(), 'last_word_end', last_word_end, view.substr(next_word) )
-                    if next_word.end() > last_word_end and next_word.end() > Pref.select_next_word_skipped[-1]:
-
-                        if Pref.selected_first_word is None:
-                            Pref.selected_first_word = next_word
-
-                            if copy_selected_text_into_find_panel:
-                                view.window().run_command( "fixed_toggle_find_panel", {
-                                        "command": "insert",
-                                        "skip": True,
-                                        "args": { "characters": view.substr( next_word ) }
-                                        } )
-
-                        if not next_word.empty() and selections.contains( next_word ):
-                            # print( 'skipping next_word', next_word )
-                            continue
-
-                        selections.add( next_word )
-                        view.show( next_word )
+                elif next_word == word_regions[-1]:
+                        sublime.status_message( "Reached the last word '%s' on the file!" % view.substr( next_word )[:100] )
+                        Pref.select_next_word_last_word = True
 
                         Pref.select_word_undo.append( 'next' )
-                        Pref.select_next_word_skipped.append( next_word.end() )
+                        Pref.select_next_word_skipped.append( word_regions[0].begin() )
 
-                        has_selected_new_word = True
-                        Pref.selected_last_word = next_word
-                        break;
+                        if not Pref.has_selected_new_word:
+                            run_next_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
-                if next_word == word_regions[-1]:
-                    sublime.status_message( "Reached the last word '%s' on the file!" % view.substr( next_word )[:100] )
-                    Pref.select_next_word_last_word = True
+                view.set_status( g_statusbarkey, "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
 
-                    Pref.select_word_undo.append( 'next' )
-                    Pref.select_next_word_skipped.append( word_regions[0].begin() )
 
-            if not has_selected_new_word or len( word_regions ) == len( selections ):
-                sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( next_word )[:100] )
+def run_next_selection_search(view, word_regions, selections, copy_selected_text_into_find_panel):
+    # print( 'select_next_word_last_word', Pref.select_next_word_last_word, Pref.select_next_word_skipped )
+    if Pref.select_next_word_last_word:
+        last_word = word_regions[0]
+        last_word_end = last_word.begin() - 1
 
-            view.set_status( g_statusbarkey, "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
+    else:
+        last_word = selections[0]
+        last_word_end = last_word.end() - 1
+
+    # print( 'last_word_end', last_word_end, view.substr( last_word ), 'select_next_word_skipped', Pref.select_next_word_skipped, 'word_regions', word_regions )
+    for next_word in word_regions:
+
+        # print( 'next_word_end', next_word.end(), 'last_word_end', last_word_end, view.substr(next_word) )
+        if next_word.end() > last_word_end and next_word.end() > Pref.select_next_word_skipped[-1]:
+
+            if Pref.selected_first_word is None:
+                Pref.selected_first_word = next_word
+
+                if copy_selected_text_into_find_panel:
+                    view.window().run_command( "fixed_toggle_find_panel", {
+                            "command": "insert",
+                            "skip": True,
+                            "args": { "characters": view.substr( next_word ) }
+                            } )
+
+            if not next_word.empty() and selections.contains( next_word ):
+                # print( 'skipping next_word', next_word )
+                continue
+
+            selections.add( next_word )
+            view.show( next_word )
+
+            Pref.select_word_undo.append( 'next' )
+            Pref.select_next_word_skipped.append( next_word.end() )
+
+            Pref.has_selected_new_word = True
+            Pref.selected_last_word = next_word
+            break;
+
+    return next_word
 
 
 class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
@@ -336,63 +345,71 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
 
         # print( 'selections', [s for s in selections] )
         if selections:
-            has_selected_new_word = False
+            Pref.has_selected_new_word = False
             word_regions = view.get_regions( g_regionkey )
 
             if word_regions:
                 settings = view.settings()
                 copy_selected_text_into_find_panel = Pref.copy_selected_text_into_find_panel( settings )
+                previous_word = run_previous_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
-                # print( 'select_previous_word_last_word', Pref.select_previous_word_last_word, Pref.select_previous_word_skipped )
-                if Pref.select_previous_word_last_word:
-                    first_word = word_regions[-1]
-                    first_word_end = first_word.end() + 1
+                if len( word_regions ) == len( selections ):
+                    sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( previous_word )[:100] )
 
-                else:
-                    first_word = selections[0]
-                    first_word_end = first_word.begin() + 1
-
-                # print( 'first_word_end', first_word_end, view.substr( first_word ), 'select_previous_word_skipped', Pref.select_previous_word_skipped, 'word_regions', word_regions )
-                for previous_word in reversed( word_regions ):
-
-                    # print( 'previous_word_end', previous_word.end(), 'first_word_end', first_word_end, view.substr(previous_word) )
-                    if previous_word.begin() < first_word_end and previous_word.begin() < Pref.select_previous_word_skipped[-1]:
-
-                        if Pref.selected_first_word is None:
-                            Pref.selected_first_word = previous_word
-
-                            if copy_selected_text_into_find_panel:
-                                view.window().run_command( "fixed_toggle_find_panel", {
-                                        "command": "insert",
-                                        "skip": True,
-                                        "args": { "characters": view.substr( previous_word ) }
-                                        } )
-
-                        if not previous_word.empty() and selections.contains( previous_word ):
-                            # print( 'skipping previous_word', previous_word )
-                            continue
-
-                        selections.add( previous_word )
-                        view.show( previous_word )
+                elif previous_word == word_regions[0]:
+                        sublime.status_message( "Reached the first word '%s' on the file!" % view.substr( previous_word )[:100] )
+                        Pref.select_previous_word_last_word = True
 
                         Pref.select_word_undo.append( 'previous' )
-                        Pref.select_previous_word_skipped.append( previous_word.begin() )
+                        Pref.select_previous_word_skipped.append( word_regions[-1].end() )
 
-                        has_selected_new_word = True
-                        Pref.selected_last_word = previous_word
-                        break;
+                        if not Pref.has_selected_new_word:
+                            run_previous_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
-                if previous_word == word_regions[0]:
-                    sublime.status_message( "Reached the first word '%s' on the file!" % view.substr( previous_word )[:100] )
-                    Pref.select_previous_word_last_word = True
+                view.set_status( g_statusbarkey, "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
 
-                    Pref.select_word_undo.append( 'previous' )
-                    Pref.select_previous_word_skipped.append( word_regions[-1].end() )
 
-            if not has_selected_new_word or len( word_regions ) == len( selections ):
-                sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( previous_word )[:100] )
+def run_previous_selection_search(view, word_regions, selections, copy_selected_text_into_find_panel):
+    # print( 'select_previous_word_last_word', Pref.select_previous_word_last_word, Pref.select_previous_word_skipped )
+    if Pref.select_previous_word_last_word:
+        first_word = word_regions[-1]
+        first_word_end = first_word.end() + 1
 
-            view.set_status( g_statusbarkey, "Selected %s of %s occurrences" % ( len( selections ), len( word_regions ) ) )
+    else:
+        first_word = selections[0]
+        first_word_end = first_word.begin() + 1
+
+    # print( 'first_word_end', first_word_end, view.substr( first_word ), 'select_previous_word_skipped', Pref.select_previous_word_skipped, 'word_regions', word_regions )
+    for previous_word in reversed( word_regions ):
+
+        # print( 'previous_word_end', previous_word.end(), 'first_word_end', first_word_end, view.substr(previous_word) )
+        if previous_word.begin() < first_word_end and previous_word.begin() < Pref.select_previous_word_skipped[-1]:
+
+            if Pref.selected_first_word is None:
+                Pref.selected_first_word = previous_word
+
+                if copy_selected_text_into_find_panel:
+                    view.window().run_command( "fixed_toggle_find_panel", {
+                            "command": "insert",
+                            "skip": True,
+                            "args": { "characters": view.substr( previous_word ) }
+                            } )
+
+            if not previous_word.empty() and selections.contains( previous_word ):
+                # print( 'skipping previous_word', previous_word )
+                continue
+
+            selections.add( previous_word )
+            view.show( previous_word )
+
+            Pref.select_word_undo.append( 'previous' )
+            Pref.select_previous_word_skipped.append( previous_word.begin() )
+
+            Pref.has_selected_new_word = True
+            Pref.selected_last_word = previous_word
+            break;
+
+    return previous_word
 
 
 class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
