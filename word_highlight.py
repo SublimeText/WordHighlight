@@ -219,6 +219,7 @@ class WordHighlightOnSelectionSingleSelectionBlinkerHelperCommand(sublime_plugin
 
         selections.clear()
         selections.add( Pref.region_borders )
+        Pref.region_borders = None
 
 
 class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.TextCommand):
@@ -489,27 +490,27 @@ class WordHighlightListener(sublime_plugin.EventListener):
                     Pref.select_previous_word_skipped.append( elements[0] )
 
         elif command_name == 'single_selection':
-            clear_line_skipping( view )
+            clear_line_skipping( view, keep_whole_word_state=True )
 
         elif command_name == 'single_selection_first':
 
             if Pref.enable_find_under_expand_bug_fixes( view.settings() ) and Pref.selected_first_word is not None:
                 Pref.region_borders = Pref.selected_first_word
 
-                clear_line_skipping( view )
+                clear_line_skipping( view, keep_whole_word_state=True )
                 return ('word_highlight_on_selection_single_selection_blinker', { "message": "FIRST" })
 
-            clear_line_skipping( view )
+            clear_line_skipping( view, keep_whole_word_state=True )
 
         elif command_name == 'single_selection_last':
 
             if Pref.enable_find_under_expand_bug_fixes( view.settings() ) and Pref.selected_last_word is not None:
                 Pref.region_borders = Pref.selected_last_word
 
-                clear_line_skipping( view )
+                clear_line_skipping( view, keep_whole_word_state=True )
                 return ('word_highlight_on_selection_single_selection_blinker', { "message": "LAST" })
 
-            clear_line_skipping( view )
+            clear_line_skipping( view, keep_whole_word_state=True )
 
         elif command_name == 'drag_select':
 
@@ -552,10 +553,13 @@ class WordHighlightListener(sublime_plugin.EventListener):
             g_sleepEvent.set()
 
 
-def clear_line_skipping(view):
-    # print('Reseting...')
-    Pref.is_on_word_selection_mode = False
+def clear_line_skipping(view, keep_whole_word_state=False):
+    # print('Reseting... keep_whole_word_state', keep_whole_word_state, Pref.region_borders)
 
+    if ( not keep_whole_word_state or not view.has_non_empty_selection_region() ) and not Pref.region_borders:
+        Pref.is_on_word_selection_mode = False
+
+    # to to to too
     Pref.select_word_undo.clear()
     Pref.select_word_redo.clear()
 
