@@ -81,6 +81,10 @@ class Pref:
         return settings.get( cls.p + 'icon_type_on_gutter', 'dot' )
 
     @classmethod
+    def always_enable_selection_regions(cls, settings):
+        return bool( settings.get( cls.p + 'always_enable_selection_regions', False ) )
+
+    @classmethod
     def enable_find_under_expand_bug_fixes(cls, settings):
         return bool( settings.get( cls.p + 'enable_find_under_expand_bug_fixes', False ) )
 
@@ -705,12 +709,15 @@ def clear_line_skipping(view, keep_whole_word_state=False):
 
 def highlight_occurences(view):
     settings = view.settings()
+    when_selection_is_empty = Pref.when_selection_is_empty( settings )
+    are_all_selections_empty = not view.has_non_empty_selection_region()
+    always_enable_selection_regions = Pref.always_enable_selection_regions( settings )
 
-    # print( "view.has_non_empty_selection_region:", view.has_non_empty_selection_region() )
-    if not view.has_non_empty_selection_region():
+    # print( "has_non_empty_selection_region:", has_non_empty_selection_region )
+    if are_all_selections_empty:
         clear_line_skipping( view )
 
-        if not Pref.when_selection_is_empty(settings):
+        if not when_selection_is_empty and not always_enable_selection_regions:
             view.erase_status( g_statusbarkey )
             view.erase_regions( g_regionkey )
             Pref.prev_regions = None
@@ -727,7 +734,7 @@ def highlight_occurences(view):
     else:
         Pref.prev_selections = prev_selections
 
-    if view.size() <= Pref.file_size_limit(settings):
+    if view.size() <= Pref.file_size_limit( settings ):
         Pref.is_file_limit_reached = False
 
     else:
@@ -744,7 +751,7 @@ def highlight_occurences(view):
 
         if sel.empty():
 
-            if Pref.when_selection_is_empty(settings):
+            if when_selection_is_empty or always_enable_selection_regions:
                 string = view.substr(view.word(sel)).strip()
 
                 if string not in processedWords:
@@ -754,12 +761,12 @@ def highlight_occurences(view):
                     if string and is_word:
                         word_regions = find_regions(view, word_regions, string, True)
 
-                    if not Pref.word_under_cursor_when_selection_is_empty(settings):
+                    if not Pref.word_under_cursor_when_selection_is_empty( settings ):
 
                         for s in selections:
                             word_regions = [r for r in word_regions if not r.contains(s)]
 
-        elif Pref.non_word_characters(settings):
+        elif Pref.non_word_characters( settings ):
             string = view.substr(sel)
 
             if string and string not in processedWords:
@@ -789,11 +796,16 @@ def highlight_occurences(view):
         view.erase_regions( 'HighlightWordsOnSelection' )
 
         if word_regions:
-            view.add_regions( 'HighlightWordsOnSelection', word_regions,
-                    Pref.color_scope_name( settings ), Pref.icon_type_on_gutter( settings )
-                            if Pref.mark_occurrences_on_gutter( settings ) else
-                    "", sublime.DRAW_NO_FILL if Pref.draw_outlined( settings ) else 0 )
 
+            if always_enable_selection_regions and not when_selection_is_empty and are_all_selections_empty:
+                draw_outlined = sublime.HIDDEN
+
+            else:
+                draw_outlined = sublime.DRAW_NO_FILL if Pref.draw_outlined( settings ) else 0
+
+            gutter = Pref.icon_type_on_gutter( settings ) if Pref.mark_occurrences_on_gutter( settings ) else ""
+
+            view.add_regions( 'HighlightWordsOnSelection', word_regions, Pref.color_scope_name( settings ), gutter, draw_outlined )
             show_status_bar( view, selections, word_regions )
 
         else:
@@ -808,9 +820,9 @@ def find_regions(view, word_regions, string, is_selection_empty):
     settings = view.settings()
 
     # to to to too
-    if Pref.non_word_characters(settings):
+    if Pref.non_word_characters( settings ):
         if Pref.is_on_word_selection_mode or \
-                Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
+                Pref.only_whole_word_when_selection_is_empty( settings ) and is_selection_empty:
             search = r'\b' + escape_regex(string) + r'\b'
 
         else:
@@ -820,17 +832,17 @@ def find_regions(view, word_regions, string, is_selection_empty):
         # It seems as if \b doesn't pay attention to word_separators, but
         # \w does. Hence we use lookaround assertions instead of \b.
         if Pref.is_on_word_selection_mode or \
-                Pref.only_whole_word_when_selection_is_empty(settings) and is_selection_empty:
+                Pref.only_whole_word_when_selection_is_empty( settings ) and is_selection_empty:
             search = r'\b(?<!\w)' + escape_regex(string) + r'(?!\w)\b'
 
         else:
             search = r'(?<!\w)' + escape_regex(string) + r'(?!\w)'
 
     if not Pref.is_file_limit_reached:
-        word_regions += view.find_all(search, Pref.case_sensitive(settings))
+        word_regions += view.find_all(search, Pref.case_sensitive( settings ))
 
     else:
-        chars = Pref.when_file_size_limit_search_this_num_of_characters(settings)
+        chars = Pref.when_file_size_limit_search_this_num_of_characters( settings )
         visible_region = view.visible_region()
 
         begin = 0 if visible_region.begin() - chars < 0 else visible_region.begin() - chars

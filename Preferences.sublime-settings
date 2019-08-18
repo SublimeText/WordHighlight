@@ -5,8 +5,12 @@
 
 	"highlight_words_on_selection.mark_occurrences_on_gutter" : false,
 
-	// valid types: dot, circle, bookmark and cross
+	// Valid types: dot, circle, bookmark and cross
 	"highlight_words_on_selection.icon_type_on_gutter" : "dot",
+
+	// Allow disable the setting when_selection_is_empty and keep the Alt+D and
+	// Ctrl+D features working.
+	"highlight_words_on_selection.always_enable_selection_regions": true,
 
 	// https://forum.sublimetext.com/t/plugin-soft-undo/40064
 	"highlight_words_on_selection.enable_find_under_expand_bug_fixes": true,
