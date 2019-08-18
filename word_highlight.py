@@ -515,7 +515,10 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
             if Pref.select_word_undo:
                 stack_type = Pref.select_word_undo.pop()
-                selected_last_word = Pref.selected_last_word[-1] if Pref.selected_last_word else None
+                selected_last_word = Pref.selected_last_word.pop() if Pref.selected_last_word else None
+
+                if Pref.selected_last_word:
+                    view.show( Pref.selected_last_word[-1] )
 
                 if stack_type == 'next':
                     Pref.select_word_redo.append( (Pref.select_next_word_skipped.pop(), 'next', selected_last_word) )
@@ -527,16 +530,21 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
             if Pref.select_word_redo:
                 elements = Pref.select_word_redo.pop()
-                Pref.select_word_undo.append( elements[1] )
+                skipped_word = elements[0]
+                stack_type = elements[1]
 
-                if elements[2]:
-                    Pref.selected_last_word.append( elements[2] )
+                selected_last_word = elements[2]
+                Pref.select_word_undo.append( stack_type )
 
-                if elements[1] == 'next':
-                    Pref.select_next_word_skipped.append( elements[0] )
+                if selected_last_word:
+                    Pref.selected_last_word.append( selected_last_word )
+                    view.show( selected_last_word )
+
+                if stack_type == 'next':
+                    Pref.select_next_word_skipped.append( skipped_word )
 
                 else:
-                    Pref.select_previous_word_skipped.append( elements[0] )
+                    Pref.select_previous_word_skipped.append( skipped_word )
 
         elif command_name == 'single_selection':
             clear_line_skipping( view, keep_whole_word_state=True )
