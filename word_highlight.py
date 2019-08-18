@@ -415,7 +415,7 @@ def select_highlighted_skip_next_word_helper(view, selections, counter):
     else:
         debug_stack( 'skip_next', get_selections_stack )
         unselect = Pref.selected_last_word.popleft() if Pref.selected_last_word else selections[0]
-        selections.subtract( selections[0] )
+        selections.subtract( unselect )
 
 
 class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
@@ -515,7 +515,7 @@ class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
         view = self.view
 
         # https://github.com/SublimeTextIssues/Core/issues/2924
-        sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_next_word_bug_fixer' ), 0 )
+        sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_previous_word_bug_fixer' ), 0 )
 
 
 class SelectHighlightedSkipPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
