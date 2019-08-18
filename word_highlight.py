@@ -3,6 +3,8 @@ import sys
 import time
 import threading
 
+from collections import deque
+
 import sublime
 import sublime_plugin
 
@@ -29,7 +31,7 @@ class Pref:
     correct_view                   = None
     region_borders                 = None
     selected_first_word            = None
-    selected_last_word             = []
+    selected_last_word             = deque()
 
     select_word_undo_stack         = []
     select_word_redo_stack         = []
@@ -493,7 +495,7 @@ def select_highlighted_skip_next_word_helper(view, selections, counter):
 
     else:
         # debug_stack( 'skip_next', get_selections_stack() )
-        unselect = Pref.selected_last_word.pop(0) if Pref.selected_last_word else selections[0]
+        unselect = Pref.selected_last_word.popleft() if Pref.selected_last_word else selections[0]
         selections.subtract( selections[0] )
 
 
