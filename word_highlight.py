@@ -366,6 +366,47 @@ def run_next_selection_search(view, word_regions, selections, copy_selected_text
     return next_word
 
 
+class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+
+        # https://github.com/SublimeTextIssues/Core/issues/2924
+        sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_next_word_bug_fixer' ), 0 )
+
+
+class SelectHighlightedSkipNextWordBugFixerCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        selections = view.sel()
+
+        if selections:
+
+            if len( Pref.select_next_word_skipped ) > 1 and len( selections ) > 1:
+                unselect = Pref.selected_last_word.pop() if Pref.selected_last_word else selections[-1]
+
+                selections.subtract( unselect )
+                select_highlighted_next_word_bug_fixer( view, selections )
+
+            else:
+                select_highlighted_next_word_bug_fixer( view, selections )
+                select_highlighted_skip_next_word_helper( view, selections, 1 )
+
+
+def select_highlighted_skip_next_word_helper(view, selections, counter):
+    counter -= 1
+
+    if len( selections ) < 2:
+        if counter < 0: return
+
+        select_highlighted_next_word_bug_fixer( view, selections )
+        select_highlighted_skip_next_word_helper( view, selections, counter )
+
+    else:
+        # debug_stack( 'skip_next', get_selections_stack() )
+        unselect = Pref.selected_last_word.popleft() if Pref.selected_last_word else selections[0]
+        selections.subtract( selections[0] )
+
+
 class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
@@ -456,47 +497,6 @@ def run_previous_selection_search(view, word_regions, selections, copy_selected_
 
     # debug_stack( 'previous_word', get_selections_stack() )
     return previous_word
-
-
-class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-
-        # https://github.com/SublimeTextIssues/Core/issues/2924
-        sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_next_word_bug_fixer' ), 0 )
-
-
-class SelectHighlightedSkipNextWordBugFixerCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        selections = view.sel()
-
-        if selections:
-
-            if len( Pref.select_next_word_skipped ) > 1 and len( selections ) > 1:
-                unselect = Pref.selected_last_word.pop() if Pref.selected_last_word else selections[-1]
-
-                selections.subtract( unselect )
-                select_highlighted_next_word_bug_fixer( view, selections )
-
-            else:
-                select_highlighted_next_word_bug_fixer( view, selections )
-                select_highlighted_skip_next_word_helper( view, selections, 1 )
-
-
-def select_highlighted_skip_next_word_helper(view, selections, counter):
-    counter -= 1
-
-    if len( selections ) < 2:
-        if counter < 0: return
-
-        select_highlighted_next_word_bug_fixer( view, selections )
-        select_highlighted_skip_next_word_helper( view, selections, counter )
-
-    else:
-        # debug_stack( 'skip_next', get_selections_stack() )
-        unselect = Pref.selected_last_word.popleft() if Pref.selected_last_word else selections[0]
-        selections.subtract( selections[0] )
 
 
 class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
