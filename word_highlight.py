@@ -435,13 +435,6 @@ class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
 
         if selections:
             word_regions = view.get_regions( g_regionkey )
-            Pref.select_word_undo.append( 'next' )
-
-            if selections[-1] == word_regions[-1]:
-                Pref.select_next_word_skipped.append( 0 )
-
-            else:
-                Pref.select_next_word_skipped.append( selections[-1].end() )
 
             if len( Pref.select_next_word_skipped ) > 1 and len( selections ) > 1:
                 selections.subtract( selections[-1] )
@@ -474,13 +467,6 @@ class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
 
         if selections:
             word_regions = view.get_regions( g_regionkey )
-            Pref.select_word_undo.append( 'previous' )
-
-            if selections[0] == word_regions[0]:
-                Pref.select_previous_word_skipped.append( sys.maxsize )
-
-            else:
-                Pref.select_previous_word_skipped.append( selections[0].begin() )
 
             if len( Pref.select_previous_word_skipped ) > 1 and len( selections ) > 1:
                 selections.subtract( selections[0] )
