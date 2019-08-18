@@ -6,8 +6,8 @@ import threading
 import sublime
 import sublime_plugin
 
-debug = print
 warning = print
+# debug_stack = print
 
 g_sleepEvent = threading.Event()
 g_is_already_running = False
@@ -275,6 +275,8 @@ def show_status_bar(view, selections, word_regions):
 class SelectHighlightedNextWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
+
+        # https://github.com/SublimeTextIssues/Core/issues/2924
         sublime.set_timeout( lambda: view.run_command( 'select_highlighted_next_word_bug_fixer' ), 0 )
 
 
@@ -286,30 +288,35 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
         if not view.has_non_empty_selection_region():
             Pref.is_on_word_selection_mode = True
 
-        # print( 'selections', [s for s in selections] )
-        if selections:
-            Pref.has_selected_new_word = False
-            word_regions = view.get_regions( g_regionkey )
+        select_highlighted_next_word_bug_fixer( view, selections )
 
-            if word_regions:
-                settings = view.settings()
-                copy_selected_text_into_find_panel = Pref.copy_selected_text_into_find_panel( settings )
-                next_word = run_next_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
-                if len( word_regions ) == len( selections ):
-                    sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( next_word )[:100] )
+def select_highlighted_next_word_bug_fixer(view, selections):
 
-                elif next_word == word_regions[-1]:
-                        sublime.status_message( "Reached the last word '%s' on the file!" % view.substr( next_word )[:100] )
-                        Pref.select_next_word_from_beginning = True
+    # print( 'selections', [s for s in selections] )
+    if selections:
+        Pref.has_selected_new_word = False
+        word_regions = view.get_regions( g_regionkey )
 
-                        Pref.select_word_undo_stack.append( 'fake_next' )
-                        Pref.select_next_word_skipped.append( word_regions[0].begin() )
+        if word_regions:
+            settings = view.settings()
+            copy_selected_text_into_find_panel = Pref.copy_selected_text_into_find_panel( settings )
+            next_word = run_next_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
-                        if not Pref.has_selected_new_word:
-                            run_next_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
+            if len( word_regions ) == len( selections ):
+                sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( next_word )[:100] )
 
-                show_status_bar( view, selections, word_regions )
+            elif next_word == word_regions[-1]:
+                    sublime.status_message( "Reached the last word '%s' on the file!" % view.substr( next_word )[:100] )
+                    Pref.select_next_word_from_beginning = True
+
+                    Pref.select_word_undo_stack.append( 'fake_next' )
+                    Pref.select_next_word_skipped.append( word_regions[0].begin() )
+
+                    if not Pref.has_selected_new_word:
+                        run_next_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
+
+            show_status_bar( view, selections, word_regions )
 
 
 def run_next_selection_search(view, word_regions, selections, copy_selected_text_into_find_panel):
@@ -353,13 +360,15 @@ def run_next_selection_search(view, word_regions, selections, copy_selected_text
             Pref.selected_last_word.append( next_word )
             break;
 
-    # debug( 'next_word', get_selections_stack() )
+    # debug_stack( 'next_word', get_selections_stack() )
     return next_word
 
 
 class SelectHighlightedPreviousWordCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
+
+        # https://github.com/SublimeTextIssues/Core/issues/2924
         sublime.set_timeout( lambda: view.run_command( 'select_highlighted_previous_word_bug_fixer' ), 0 )
 
 
@@ -371,30 +380,35 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
         if not view.has_non_empty_selection_region():
             Pref.is_on_word_selection_mode = True
 
-        # print( 'selections', [s for s in selections] )
-        if selections:
-            Pref.has_selected_new_word = False
-            word_regions = view.get_regions( g_regionkey )
+        select_highlighted_previous_word_bug_fixer( view, selections )
 
-            if word_regions:
-                settings = view.settings()
-                copy_selected_text_into_find_panel = Pref.copy_selected_text_into_find_panel( settings )
-                previous_word = run_previous_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
-                if len( word_regions ) == len( selections ):
-                    sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( previous_word )[:100] )
+def select_highlighted_previous_word_bug_fixer(view, selections):
 
-                elif previous_word == word_regions[0]:
-                        sublime.status_message( "Reached the first word '%s' on the file!" % view.substr( previous_word )[:100] )
-                        Pref.select_previous_word_from_bottom = True
+    # print( 'selections', [s for s in selections] )
+    if selections:
+        Pref.has_selected_new_word = False
+        word_regions = view.get_regions( g_regionkey )
 
-                        Pref.select_word_undo_stack.append( 'fake_previous' )
-                        Pref.select_previous_word_skipped.append( word_regions[-1].end() )
+        if word_regions:
+            settings = view.settings()
+            copy_selected_text_into_find_panel = Pref.copy_selected_text_into_find_panel( settings )
+            previous_word = run_previous_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
-                        if not Pref.has_selected_new_word:
-                            run_previous_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
+            if len( word_regions ) == len( selections ):
+                sublime.status_message( "Selected all occurrences of the word '%s' on the file!" % view.substr( previous_word )[:100] )
 
-                show_status_bar( view, selections, word_regions )
+            elif previous_word == word_regions[0]:
+                    sublime.status_message( "Reached the first word '%s' on the file!" % view.substr( previous_word )[:100] )
+                    Pref.select_previous_word_from_bottom = True
+
+                    Pref.select_word_undo_stack.append( 'fake_previous' )
+                    Pref.select_previous_word_skipped.append( word_regions[-1].end() )
+
+                    if not Pref.has_selected_new_word:
+                        run_previous_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
+
+            show_status_bar( view, selections, word_regions )
 
 
 def run_previous_selection_search(view, word_regions, selections, copy_selected_text_into_find_panel):
@@ -438,11 +452,19 @@ def run_previous_selection_search(view, word_regions, selections, copy_selected_
             Pref.selected_last_word.append( previous_word )
             break;
 
-    # debug( 'previous_word', get_selections_stack() )
+    # debug_stack( 'previous_word', get_selections_stack() )
     return previous_word
 
 
 class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+
+        # https://github.com/SublimeTextIssues/Core/issues/2924
+        sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_next_word_bug_fixer' ), 0 )
+
+
+class SelectHighlightedSkipNextWordBugFixerCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         selections = view.sel()
@@ -453,31 +475,37 @@ class SelectHighlightedSkipNextWordCommand(sublime_plugin.TextCommand):
                 unselect = Pref.selected_last_word.pop() if Pref.selected_last_word else selections[-1]
 
                 selections.subtract( unselect )
-                view.run_command( 'select_highlighted_next_word' )
+                select_highlighted_next_word_bug_fixer( view, selections )
 
             else:
-                view.run_command( 'select_highlighted_next_word' )
-                sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_next_word_helper', { "counter": 1 } ) )
+                select_highlighted_next_word_bug_fixer( view, selections )
+                select_highlighted_skip_next_word_helper( view, selections, 1 )
 
 
-class SelectHighlightedSkipNextWordHelperCommand(sublime_plugin.TextCommand):
-    def run(self, edit, counter):
-        counter -= 1
-        view = self.view
-        selections = view.sel()
+def select_highlighted_skip_next_word_helper(view, selections, counter):
+    counter -= 1
 
-        if len( selections ) < 2:
-            if counter < 0: return
+    if len( selections ) < 2:
+        if counter < 0: return
 
-            view.run_command( 'select_highlighted_next_word' )
-            sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_next_word_helper', { "counter": counter } ) )
+        select_highlighted_next_word_bug_fixer( view, selections )
+        select_highlighted_skip_next_word_helper( view, selections, counter )
 
-        else:
-            # debug( 'skip_next', get_selections_stack() )
-            selections.subtract( selections[0] )
+    else:
+        # debug_stack( 'skip_next', get_selections_stack() )
+        unselect = Pref.selected_last_word.pop(0) if Pref.selected_last_word else selections[0]
+        selections.subtract( selections[0] )
 
 
 class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+
+        # https://github.com/SublimeTextIssues/Core/issues/2924
+        sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_next_word_bug_fixer' ), 0 )
+
+
+class SelectHighlightedSkipPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         selections = view.sel()
@@ -488,28 +516,26 @@ class SelectHighlightedSkipPreviousWordCommand(sublime_plugin.TextCommand):
                 unselect = Pref.selected_last_word.pop() if Pref.selected_last_word else selections[0]
 
                 selections.subtract( unselect )
-                view.run_command( 'select_highlighted_previous_word' )
+                select_highlighted_previous_word_bug_fixer( view, selections )
 
             else:
-                view.run_command( 'select_highlighted_previous_word' )
-                sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_previous_word_helper', { "counter": 1 } ) )
+                select_highlighted_previous_word_bug_fixer( view, selections )
+                select_highlighted_skip_previous_word_helper( view, selections, 1 )
 
 
-class SelectHighlightedSkipPreviousWordHelperCommand(sublime_plugin.TextCommand):
-    def run(self, edit, counter):
-        counter -= 1
-        view = self.view
-        selections = view.sel()
+def select_highlighted_skip_previous_word_helper(view, selections, counter):
+    counter -= 1
 
-        if len( selections ) < 2:
-            if counter < 0: return
+    if len( selections ) < 2:
+        if counter < 0: return
 
-            view.run_command( 'select_highlighted_previous_word' )
-            sublime.set_timeout( lambda: view.run_command( 'select_highlighted_skip_previous_word_helper', { "counter": counter } ) )
+        select_highlighted_previous_word_bug_fixer( view, selections )
+        select_highlighted_skip_previous_word_helper( view, selections, counter )
 
-        else:
-            # debug( 'skip_previous', get_selections_stack() )
-            selections.subtract( selections[-1] )
+    else:
+        # debug_stack( 'skip_previous', get_selections_stack() )
+        unselect = Pref.selected_last_word.pop() if Pref.selected_last_word else selections[-1]
+        selections.subtract( unselect )
 
 
 class WordHighlightListener(sublime_plugin.EventListener):
@@ -549,7 +575,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
                 else:
                     warning( "HighlightWordsOnSelection Error: 'soft_undo' got an invalid stack type", stack_type, get_selections_stack() )
 
-            # debug( 'soft_undo', get_selections_stack() )
+            # debug_stack( 'soft_undo', get_selections_stack() )
 
         elif command_name == 'soft_redo':
 
@@ -574,7 +600,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
                 else:
                     warning( "HighlightWordsOnSelection Error: 'soft_redo' got an invalid stack type", stack_type, get_selections_stack() )
 
-            # debug( 'soft_redo', get_selections_stack() )
+            # debug_stack( 'soft_redo', get_selections_stack() )
 
         elif command_name == 'single_selection':
             clear_line_skipping( view, keep_whole_word_state=True )
