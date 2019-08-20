@@ -31,7 +31,7 @@ except ImportError as error:
 
 class get_selections_stack(object):
     def __repr__(self):
-        return "select_word_undo_stack %s %s select_word_redo_stack %s %s" % (
+        return "select_word_undo_stack %s %s select_word_redo_stack %s %s %s" % (
                 Pref.select_word_undo_stack, Pref.select_next_word_skipped,
                 Pref.select_word_redo_stack, Pref.select_previous_word_skipped,
                 Pref.is_file_limit_reached,
