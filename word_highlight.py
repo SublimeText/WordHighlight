@@ -19,6 +19,15 @@ g_is_already_running = False
 g_regionkey = "HighlightWordsOnSelection"
 g_statusbarkey = "HighlightWordsOnSelection"
 
+try:
+    from FixedToggleFindPanel.fixed_toggle_find_panel import is_panel_focused
+
+except ImportError as error:
+    print( 'WordHighlightOnSelection Error: Could not import the FixedToggleFindPanel package!', error )
+
+    def is_panel_focused():
+        return False
+
 
 class get_selections_stack(object):
     def __repr__(self):
@@ -276,6 +285,11 @@ class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
 
 
 def show_status_bar(view, selections, word_regions):
+
+    if is_panel_focused():
+        window = view.window() or sublime.active_window()
+        view = window.active_view()
+
     view.set_status(
             g_statusbarkey, "Selected %s of %s%s occurrences" % (
                 len( selections ),
