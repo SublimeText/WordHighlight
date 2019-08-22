@@ -301,7 +301,7 @@ def show_status_bar(view, selections, word_regions):
     view.set_status(
             g_statusbarkey, "Selected %s of %s%s occurrences" % (
                 len( selections ),
-                "approximately ~" if Pref.is_file_limit_reached else "",
+                "~" if Pref.is_file_limit_reached else "",
                 len( word_regions )
             )
         )
