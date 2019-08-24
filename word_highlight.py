@@ -20,7 +20,6 @@ g_is_already_running = False
 
 g_regionkey = "HighlightWordsOnSelection"
 g_statusbarkey = "HighlightWordsOnSelection"
-g_view_selections = {}
 
 try:
     from FixedToggleFindPanel.fixed_toggle_find_panel import is_panel_focused
@@ -32,7 +31,7 @@ except ImportError as error:
         return False
 
 
-class get_selections_stack(object):
+class selections_stack(object):
     def __repr__(self):
         state = State()
 
@@ -48,9 +47,10 @@ class timestamp(object):
                 datetime.datetime.now(),
             )
 
-# Allows to pass get_selections_stack as a function parameter without evaluating/creating its string!
+# Allows to pass selections_stack as a function parameter without evaluating/creating its string!
 timestamp = timestamp()
-get_selections_stack = get_selections_stack()
+selections_stack = selections_stack()
+g_view_selections = {}
 
 
 def State(view=None):
@@ -344,7 +344,7 @@ def run_next_selection_search(view, word_regions, selections, copy_selected_text
             state.selected_last_word.append( next_word )
             break;
 
-    debug_stack( timestamp, 'next_word', get_selections_stack )
+    debug_stack( timestamp, 'next_word', selections_stack )
     return next_word
 
 
@@ -375,7 +375,7 @@ class SelectHighlightedSkipNextWordBugFixerCommand(sublime_plugin.TextCommand):
                 select_highlighted_skip_next_word_helper( view, selections, 1 )
 
         else:
-            debug_stack( timestamp, 'skip_next', get_selections_stack )
+            debug_stack( timestamp, 'skip_next', selections_stack )
 
 
 def select_highlighted_skip_next_word_helper(view, selections, counter):
@@ -388,7 +388,7 @@ def select_highlighted_skip_next_word_helper(view, selections, counter):
         select_highlighted_skip_next_word_helper( view, selections, counter )
 
     else:
-        debug_stack( timestamp, 'skip_next', get_selections_stack )
+        debug_stack( timestamp, 'skip_next', selections_stack )
         state = State( view )
 
         unselect = state.selected_last_word.popleft() if state.selected_last_word else selections[0]
@@ -485,7 +485,7 @@ def run_previous_selection_search(view, word_regions, selections, copy_selected_
             state.selected_last_word.append( previous_word )
             break;
 
-    debug_stack( timestamp, 'previous_word', get_selections_stack )
+    debug_stack( timestamp, 'previous_word', selections_stack )
     return previous_word
 
 
@@ -517,7 +517,7 @@ class SelectHighlightedSkipPreviousWordBugFixerCommand(sublime_plugin.TextComman
                 select_highlighted_skip_previous_word_helper( view, selections, 1 )
 
         else:
-            debug_stack( timestamp, 'skip_previous', get_selections_stack )
+            debug_stack( timestamp, 'skip_previous', selections_stack )
 
 
 def select_highlighted_skip_previous_word_helper(view, selections, counter):
@@ -530,7 +530,7 @@ def select_highlighted_skip_previous_word_helper(view, selections, counter):
         select_highlighted_skip_previous_word_helper( view, selections, counter )
 
     else:
-        debug_stack( timestamp, 'skip_previous', get_selections_stack )
+        debug_stack( timestamp, 'skip_previous', selections_stack )
         state = State( view )
 
         unselect = state.selected_last_word.pop() if state.selected_last_word else selections[-1]
@@ -557,14 +557,14 @@ class WordHighlightListener(sublime_plugin.EventListener):
                         stack_type = state.select_word_undo_stack.pop()
                         state.select_next_word_skipped.pop()
                     else:
-                        warning( "HighlightWordsOnSelection Error: 'soft_undo' empty stack", stack_type, get_selections_stack )
+                        warning( "HighlightWordsOnSelection Error: 'soft_undo' empty stack", stack_type, selections_stack )
 
                 elif stack_type == 'fake_previous':
                     if state.select_word_undo_stack:
                         stack_type = state.select_word_undo_stack.pop()
                         state.select_previous_word_skipped.pop()
                     else:
-                        warning( "HighlightWordsOnSelection Error: 'soft_undo' empty stack", stack_type, get_selections_stack )
+                        warning( "HighlightWordsOnSelection Error: 'soft_undo' empty stack", stack_type, selections_stack )
 
                 if stack_type == 'next':
                     state.select_word_redo_stack.append( (state.select_next_word_skipped.pop(), 'next', selected_last_word) )
@@ -573,9 +573,9 @@ class WordHighlightListener(sublime_plugin.EventListener):
                     state.select_word_redo_stack.append( (state.select_previous_word_skipped.pop(), 'previous', selected_last_word) )
 
                 else:
-                    warning( "HighlightWordsOnSelection Error: 'soft_undo' got an invalid stack type", stack_type, get_selections_stack )
+                    warning( "HighlightWordsOnSelection Error: 'soft_undo' got an invalid stack type", stack_type, selections_stack )
 
-            debug_stack( timestamp, 'soft_undo', get_selections_stack )
+            debug_stack( timestamp, 'soft_undo', selections_stack )
 
         elif command_name == 'soft_redo':
             state = State( view )
@@ -599,9 +599,9 @@ class WordHighlightListener(sublime_plugin.EventListener):
                     state.select_previous_word_skipped.append( skipped_word )
 
                 else:
-                    warning( "HighlightWordsOnSelection Error: 'soft_redo' got an invalid stack type", stack_type, get_selections_stack )
+                    warning( "HighlightWordsOnSelection Error: 'soft_redo' got an invalid stack type", stack_type, selections_stack )
 
-            debug_stack( timestamp, 'soft_redo', get_selections_stack )
+            debug_stack( timestamp, 'soft_redo', selections_stack )
 
         elif command_name == 'single_selection':
             clear_line_skipping( view, keep_whole_word_state=True )
