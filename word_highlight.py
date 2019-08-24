@@ -10,6 +10,7 @@ import sublime
 import sublime_plugin
 
 warning = print
+CLEAR_CURSORS_CARETS_BLINKING = 300
 
 debug_stack = print
 debug_stack = lambda *args: None
@@ -201,70 +202,6 @@ def escape_regex(str):
     for c in "'<>`":
         str = str.replace('\\' + c, c)
     return str
-
-
-def force_focus(view, region_borders):
-    window = view.window()
-    window.focus_view( view )
-    view.show( region_borders )
-
-
-def fix_selection_aligment(selections, region_borders):
-
-    if selections:
-        last_selection = None
-
-        for selection in sorted( selections, key=lambda item: item.begin() ):
-            # print('selection.begin', selection.begin())
-
-            if selection.begin() > region_borders.begin():
-
-                if last_selection is None:
-                    last_selection = selection
-                break
-
-            last_selection = selection
-
-        return last_selection
-
-
-class WordHighlightOnSelectionSingleSelectionBlinkerCommand(sublime_plugin.TextCommand):
-
-    def run(self, edit, message):
-        view = self.view
-        selections = view.sel()
-        settings = view.settings()
-        Pref.region_borders = fix_selection_aligment( selections, Pref.region_borders )
-
-        def run_blinking_focus():
-            force_focus( view, Pref.region_borders )
-            view.run_command( "word_highlight_on_selection_single_selection_blinker_helper" )
-
-        selections.clear()
-        sublime.status_message( "Selection set to %s %s" % ( message, view.substr( Pref.region_borders )[:100] ) )
-
-        # view.run_command( "move", {"by": "characters", "forward": False} )
-        # print( "SingleSelectionLast, Selecting last:", Pref.region_borders )
-        if Pref.blink_selection_on_single_selection( settings ):
-            selections.add( Pref.region_borders.end() )
-            sublime.set_timeout( run_blinking_focus, 250 )
-            force_focus( view, Pref.region_borders )
-
-        else:
-            selections.add( Pref.region_borders )
-            force_focus( view, Pref.region_borders )
-
-
-class WordHighlightOnSelectionSingleSelectionBlinkerHelperCommand(sublime_plugin.TextCommand):
-
-    def run(self, edit):
-        # print( 'Calling Selection Last Helper... ', Pref.region_borders )
-        view = self.view
-        selections = view.sel()
-
-        selections.clear()
-        selections.add( Pref.region_borders )
-        Pref.region_borders = None
 
 
 class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.TextCommand):
@@ -652,9 +589,16 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
             if Pref.enable_find_under_expand_bug_fixes( view.settings() ) and Pref.selected_first_word is not None:
                 Pref.region_borders = Pref.selected_first_word
-
                 clear_line_skipping( view, keep_whole_word_state=True )
-                return ('word_highlight_on_selection_single_selection_blinker', { "message": "FIRST" })
+
+                def reset(): Pref.region_borders = None
+                sublime.set_timeout( reset, CLEAR_CURSORS_CARETS_BLINKING )
+
+                return ('clear_cursors_carets_single_selection_blinker', {
+                        "message": "FIRST",
+                        "region_start": Pref.region_borders.begin(),
+                        "region_end": Pref.region_borders.end(),
+                    })
 
             clear_line_skipping( view, keep_whole_word_state=True )
 
@@ -662,9 +606,16 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
             if Pref.enable_find_under_expand_bug_fixes( view.settings() ) and Pref.selected_last_word:
                 Pref.region_borders = Pref.selected_last_word[-1]
-
                 clear_line_skipping( view, keep_whole_word_state=True )
-                return ('word_highlight_on_selection_single_selection_blinker', { "message": "LAST" })
+
+                def reset(): Pref.region_borders = None
+                sublime.set_timeout( reset, CLEAR_CURSORS_CARETS_BLINKING )
+
+                return ('clear_cursors_carets_single_selection_blinker', {
+                        "message": "LAST",
+                        "region_start": Pref.region_borders.begin(),
+                        "region_end": Pref.region_borders.end(),
+                    })
 
             clear_line_skipping( view, keep_whole_word_state=True )
 
