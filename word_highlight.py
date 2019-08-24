@@ -34,12 +34,12 @@ except ImportError as error:
 
 class get_selections_stack(object):
     def __repr__(self):
-        preferences = pref()
+        state = State()
 
         return "select_word_undo_stack %s %s select_word_redo_stack %s %s %s" % (
-                preferences.select_word_undo_stack, preferences.select_next_word_skipped,
-                preferences.select_word_redo_stack, preferences.select_previous_word_skipped,
-                preferences.is_file_limit_reached,
+                state.select_word_undo_stack, state.select_next_word_skipped,
+                state.select_word_redo_stack, state.select_previous_word_skipped,
+                state.is_file_limit_reached,
             )
 
 class timestamp(object):
@@ -53,7 +53,7 @@ timestamp = timestamp()
 get_selections_stack = get_selections_stack()
 
 
-def pref(view=None):
+def State(view=None):
     view = view or Pref.active_view or sublime.active_window().active_view()
     Pref.active_view = view
     return g_view_selections.setdefault( view.id(), Pref() )
@@ -249,7 +249,7 @@ def show_status_bar(view, selections, word_regions):
     view.set_status(
             g_statusbarkey, "Selected %s of %s%s occurrences" % (
                 len( selections ),
-                "~" if pref().is_file_limit_reached else "",
+                "~" if State().is_file_limit_reached else "",
                 len( word_regions )
             )
         )
@@ -270,19 +270,19 @@ class SelectHighlightedNextWordBugFixerCommand(sublime_plugin.TextCommand):
 
 
 def select_highlighted_next_word_bug_fixer(view, selections):
-    preferences = pref( view )
+    state = State( view )
 
     if not view.has_non_empty_selection_region():
-        preferences.is_on_word_selection_mode = True
+        state.is_on_word_selection_mode = True
 
     # print( 'selections', [s for s in selections] )
     if selections:
-        preferences.has_selected_new_word = False
+        state.has_selected_new_word = False
         word_regions = view.get_regions( g_regionkey )
 
         if word_regions:
             settings = view.settings()
-            copy_selected_text_into_find_panel = preferences.copy_selected_text_into_find_panel( settings )
+            copy_selected_text_into_find_panel = state.copy_selected_text_into_find_panel( settings )
             next_word = run_next_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
             if len( word_regions ) == len( selections ):
@@ -290,37 +290,37 @@ def select_highlighted_next_word_bug_fixer(view, selections):
 
             elif next_word == word_regions[-1]:
                     sublime.status_message( "Reached the last word '%s' on the file!" % view.substr( next_word )[:100] )
-                    preferences.select_next_word_from_beginning = True
+                    state.select_next_word_from_beginning = True
 
-                    preferences.select_word_undo_stack.append( 'fake_next' )
-                    preferences.select_next_word_skipped.append( word_regions[0].begin() )
+                    state.select_word_undo_stack.append( 'fake_next' )
+                    state.select_next_word_skipped.append( word_regions[0].begin() )
 
-                    if not preferences.has_selected_new_word:
+                    if not state.has_selected_new_word:
                         run_next_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
             show_status_bar( view, selections, word_regions )
 
 
 def run_next_selection_search(view, word_regions, selections, copy_selected_text_into_find_panel):
-    preferences = pref( view )
+    state = State( view )
 
-    # print( 'select_next_word_from_beginning', preferences.select_next_word_from_beginning, preferences.select_next_word_skipped )
-    if preferences.select_next_word_from_beginning:
+    # print( 'select_next_word_from_beginning', state.select_next_word_from_beginning, state.select_next_word_skipped )
+    if state.select_next_word_from_beginning:
         last_word = word_regions[0]
         last_word_end = last_word.begin() - 1
 
     else:
-        last_word = preferences.selected_last_word[-1] if preferences.selected_last_word else selections[-1]
+        last_word = state.selected_last_word[-1] if state.selected_last_word else selections[-1]
         last_word_end = last_word.end() - 1
 
-    # print( 'last_word_end', last_word_end, view.substr( last_word ), 'select_next_word_skipped', preferences.select_next_word_skipped, 'word_regions', word_regions )
+    # print( 'last_word_end', last_word_end, view.substr( last_word ), 'select_next_word_skipped', state.select_next_word_skipped, 'word_regions', word_regions )
     for next_word in word_regions:
 
         # print( 'next_word_end', next_word.end(), 'last_word_end', last_word_end, view.substr(next_word) )
-        if next_word.end() > last_word_end and next_word.end() > preferences.select_next_word_skipped[-1]:
+        if next_word.end() > last_word_end and next_word.end() > state.select_next_word_skipped[-1]:
 
-            if preferences.selected_first_word is None:
-                preferences.selected_first_word = next_word
+            if state.selected_first_word is None:
+                state.selected_first_word = next_word
 
                 if copy_selected_text_into_find_panel:
                     view.window().run_command( "fixed_toggle_find_panel", {
@@ -336,12 +336,12 @@ def run_next_selection_search(view, word_regions, selections, copy_selected_text
             selections.add( next_word )
             view.show( next_word )
 
-            preferences.select_word_redo_stack.clear()
-            preferences.select_word_undo_stack.append( 'next' )
-            preferences.select_next_word_skipped.append( next_word.end() )
+            state.select_word_redo_stack.clear()
+            state.select_word_undo_stack.append( 'next' )
+            state.select_next_word_skipped.append( next_word.end() )
 
-            preferences.has_selected_new_word = True
-            preferences.selected_last_word.append( next_word )
+            state.has_selected_new_word = True
+            state.selected_last_word.append( next_word )
             break;
 
     debug_stack( timestamp, 'next_word', get_selections_stack )
@@ -360,12 +360,12 @@ class SelectHighlightedSkipNextWordBugFixerCommand(sublime_plugin.TextCommand):
         view = self.view
         selections = view.sel()
         word_regions = view.get_regions( g_regionkey )
-        preferences = pref( view )
+        state = State( view )
 
-        if selections and ( len( selections ) != len( word_regions ) or preferences.is_file_limit_reached ):
+        if selections and ( len( selections ) != len( word_regions ) or state.is_file_limit_reached ):
 
-            if len( preferences.select_next_word_skipped ) > 1 and len( selections ) > 1:
-                unselect = preferences.selected_last_word.pop() if preferences.selected_last_word else selections[-1]
+            if len( state.select_next_word_skipped ) > 1 and len( selections ) > 1:
+                unselect = state.selected_last_word.pop() if state.selected_last_word else selections[-1]
 
                 selections.subtract( unselect )
                 select_highlighted_next_word_bug_fixer( view, selections )
@@ -389,9 +389,9 @@ def select_highlighted_skip_next_word_helper(view, selections, counter):
 
     else:
         debug_stack( timestamp, 'skip_next', get_selections_stack )
-        preferences = pref( view )
+        state = State( view )
 
-        unselect = preferences.selected_last_word.popleft() if preferences.selected_last_word else selections[0]
+        unselect = state.selected_last_word.popleft() if state.selected_last_word else selections[0]
         selections.subtract( unselect )
 
 
@@ -411,19 +411,19 @@ class SelectHighlightedPreviousWordBugFixerCommand(sublime_plugin.TextCommand):
 
 
 def select_highlighted_previous_word_bug_fixer(view, selections):
-    preferences = pref( view )
+    state = State( view )
 
     if not view.has_non_empty_selection_region():
-        preferences.is_on_word_selection_mode = True
+        state.is_on_word_selection_mode = True
 
     # print( 'selections', [s for s in selections] )
     if selections:
-        preferences.has_selected_new_word = False
+        state.has_selected_new_word = False
         word_regions = view.get_regions( g_regionkey )
 
         if word_regions:
             settings = view.settings()
-            copy_selected_text_into_find_panel = preferences.copy_selected_text_into_find_panel( settings )
+            copy_selected_text_into_find_panel = state.copy_selected_text_into_find_panel( settings )
             previous_word = run_previous_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
             if len( word_regions ) == len( selections ):
@@ -431,37 +431,37 @@ def select_highlighted_previous_word_bug_fixer(view, selections):
 
             elif previous_word == word_regions[0]:
                     sublime.status_message( "Reached the first word '%s' on the file!" % view.substr( previous_word )[:100] )
-                    preferences.select_previous_word_from_bottom = True
+                    state.select_previous_word_from_bottom = True
 
-                    preferences.select_word_undo_stack.append( 'fake_previous' )
-                    preferences.select_previous_word_skipped.append( word_regions[-1].end() )
+                    state.select_word_undo_stack.append( 'fake_previous' )
+                    state.select_previous_word_skipped.append( word_regions[-1].end() )
 
-                    if not preferences.has_selected_new_word:
+                    if not state.has_selected_new_word:
                         run_previous_selection_search( view, word_regions, selections, copy_selected_text_into_find_panel )
 
             show_status_bar( view, selections, word_regions )
 
 
 def run_previous_selection_search(view, word_regions, selections, copy_selected_text_into_find_panel):
-    preferences = pref( view )
+    state = State( view )
 
-    # print( 'select_previous_word_from_bottom', preferences.select_previous_word_from_bottom, preferences.select_previous_word_skipped )
-    if preferences.select_previous_word_from_bottom:
+    # print( 'select_previous_word_from_bottom', state.select_previous_word_from_bottom, state.select_previous_word_skipped )
+    if state.select_previous_word_from_bottom:
         last_word = word_regions[-1]
         last_word_end = last_word.end() + 1
 
     else:
-        last_word = preferences.selected_last_word[-1] if preferences.selected_last_word else selections[-1]
+        last_word = state.selected_last_word[-1] if state.selected_last_word else selections[-1]
         last_word_end = last_word.begin() + 1
 
-    # print( 'last_word_end', last_word_end, view.substr( last_word ), 'select_previous_word_skipped', preferences.select_previous_word_skipped, 'word_regions', word_regions )
+    # print( 'last_word_end', last_word_end, view.substr( last_word ), 'select_previous_word_skipped', state.select_previous_word_skipped, 'word_regions', word_regions )
     for previous_word in reversed( word_regions ):
 
         # print( 'previous_word_end', previous_word.end(), 'last_word_end', last_word_end, view.substr(previous_word) )
-        if previous_word.begin() < last_word_end and previous_word.begin() < preferences.select_previous_word_skipped[-1]:
+        if previous_word.begin() < last_word_end and previous_word.begin() < state.select_previous_word_skipped[-1]:
 
-            if preferences.selected_first_word is None:
-                preferences.selected_first_word = previous_word
+            if state.selected_first_word is None:
+                state.selected_first_word = previous_word
 
                 if copy_selected_text_into_find_panel:
                     view.window().run_command( "fixed_toggle_find_panel", {
@@ -477,12 +477,12 @@ def run_previous_selection_search(view, word_regions, selections, copy_selected_
             selections.add( previous_word )
             view.show( previous_word )
 
-            preferences.select_word_redo_stack.clear()
-            preferences.select_word_undo_stack.append( 'previous' )
-            preferences.select_previous_word_skipped.append( previous_word.begin() )
+            state.select_word_redo_stack.clear()
+            state.select_word_undo_stack.append( 'previous' )
+            state.select_previous_word_skipped.append( previous_word.begin() )
 
-            preferences.has_selected_new_word = True
-            preferences.selected_last_word.append( previous_word )
+            state.has_selected_new_word = True
+            state.selected_last_word.append( previous_word )
             break;
 
     debug_stack( timestamp, 'previous_word', get_selections_stack )
@@ -502,12 +502,12 @@ class SelectHighlightedSkipPreviousWordBugFixerCommand(sublime_plugin.TextComman
         view = self.view
         selections = view.sel()
         word_regions = view.get_regions( g_regionkey )
-        preferences = pref( view )
+        state = State( view )
 
-        if selections and ( len( selections ) != len( word_regions ) or preferences.is_file_limit_reached ):
+        if selections and ( len( selections ) != len( word_regions ) or state.is_file_limit_reached ):
 
-            if len( preferences.select_previous_word_skipped ) > 1 and len( selections ) > 1:
-                unselect = preferences.selected_last_word.pop() if preferences.selected_last_word else selections[0]
+            if len( state.select_previous_word_skipped ) > 1 and len( selections ) > 1:
+                unselect = state.selected_last_word.pop() if state.selected_last_word else selections[0]
 
                 selections.subtract( unselect )
                 select_highlighted_previous_word_bug_fixer( view, selections )
@@ -531,9 +531,9 @@ def select_highlighted_skip_previous_word_helper(view, selections, counter):
 
     else:
         debug_stack( timestamp, 'skip_previous', get_selections_stack )
-        preferences = pref( view )
+        state = State( view )
 
-        unselect = preferences.selected_last_word.pop() if preferences.selected_last_word else selections[-1]
+        unselect = state.selected_last_word.pop() if state.selected_last_word else selections[-1]
         selections.subtract( unselect )
 
 
@@ -543,34 +543,34 @@ class WordHighlightListener(sublime_plugin.EventListener):
         # print('command_name', command_name, args)
 
         if command_name == 'soft_undo':
-            preferences = pref( view )
+            state = State( view )
 
-            if preferences.select_word_undo_stack:
-                stack_type = preferences.select_word_undo_stack.pop()
-                selected_last_word = preferences.selected_last_word.pop() if preferences.selected_last_word else None
+            if state.select_word_undo_stack:
+                stack_type = state.select_word_undo_stack.pop()
+                selected_last_word = state.selected_last_word.pop() if state.selected_last_word else None
 
-                if preferences.selected_last_word:
-                    view.show( preferences.selected_last_word[-1] )
+                if state.selected_last_word:
+                    view.show( state.selected_last_word[-1] )
 
                 if stack_type == 'fake_next':
-                    if preferences.select_word_undo_stack:
-                        stack_type = preferences.select_word_undo_stack.pop()
-                        preferences.select_next_word_skipped.pop()
+                    if state.select_word_undo_stack:
+                        stack_type = state.select_word_undo_stack.pop()
+                        state.select_next_word_skipped.pop()
                     else:
                         warning( "HighlightWordsOnSelection Error: 'soft_undo' empty stack", stack_type, get_selections_stack )
 
                 elif stack_type == 'fake_previous':
-                    if preferences.select_word_undo_stack:
-                        stack_type = preferences.select_word_undo_stack.pop()
-                        preferences.select_previous_word_skipped.pop()
+                    if state.select_word_undo_stack:
+                        stack_type = state.select_word_undo_stack.pop()
+                        state.select_previous_word_skipped.pop()
                     else:
                         warning( "HighlightWordsOnSelection Error: 'soft_undo' empty stack", stack_type, get_selections_stack )
 
                 if stack_type == 'next':
-                    preferences.select_word_redo_stack.append( (preferences.select_next_word_skipped.pop(), 'next', selected_last_word) )
+                    state.select_word_redo_stack.append( (state.select_next_word_skipped.pop(), 'next', selected_last_word) )
 
                 elif stack_type == 'previous':
-                    preferences.select_word_redo_stack.append( (preferences.select_previous_word_skipped.pop(), 'previous', selected_last_word) )
+                    state.select_word_redo_stack.append( (state.select_previous_word_skipped.pop(), 'previous', selected_last_word) )
 
                 else:
                     warning( "HighlightWordsOnSelection Error: 'soft_undo' got an invalid stack type", stack_type, get_selections_stack )
@@ -578,25 +578,25 @@ class WordHighlightListener(sublime_plugin.EventListener):
             debug_stack( timestamp, 'soft_undo', get_selections_stack )
 
         elif command_name == 'soft_redo':
-            preferences = pref( view )
+            state = State( view )
 
-            if preferences.select_word_redo_stack:
-                elements = preferences.select_word_redo_stack.pop()
+            if state.select_word_redo_stack:
+                elements = state.select_word_redo_stack.pop()
                 skipped_word = elements[0]
                 stack_type = elements[1]
 
                 selected_last_word = elements[2]
-                preferences.select_word_undo_stack.append( stack_type )
+                state.select_word_undo_stack.append( stack_type )
 
                 if selected_last_word:
-                    preferences.selected_last_word.append( selected_last_word )
+                    state.selected_last_word.append( selected_last_word )
                     view.show( selected_last_word )
 
                 if stack_type == 'next':
-                    preferences.select_next_word_skipped.append( skipped_word )
+                    state.select_next_word_skipped.append( skipped_word )
 
                 elif stack_type == 'previous':
-                    preferences.select_previous_word_skipped.append( skipped_word )
+                    state.select_previous_word_skipped.append( skipped_word )
 
                 else:
                     warning( "HighlightWordsOnSelection Error: 'soft_redo' got an invalid stack type", stack_type, get_selections_stack )
@@ -607,37 +607,37 @@ class WordHighlightListener(sublime_plugin.EventListener):
             clear_line_skipping( view, keep_whole_word_state=True )
 
         elif command_name == 'single_selection_first':
-            preferences = pref( view )
+            state = State( view )
 
-            if preferences.enable_find_under_expand_bug_fixes( view.settings() ) and preferences.selected_first_word is not None:
-                preferences.blink_region = preferences.selected_first_word
+            if state.enable_find_under_expand_bug_fixes( view.settings() ) and state.selected_first_word is not None:
+                state.blink_region = state.selected_first_word
                 clear_line_skipping( view, keep_whole_word_state=True )
 
-                def reset(): preferences.blink_region = None
+                def reset(): state.blink_region = None
                 sublime.set_timeout( reset, CLEAR_CURSORS_CARETS_BLINKING )
 
                 return ('clear_cursors_carets_single_selection_blinker', {
                         "message": "FIRST",
-                        "region_start": preferences.blink_region.begin(),
-                        "region_end": preferences.blink_region.end(),
+                        "region_start": state.blink_region.begin(),
+                        "region_end": state.blink_region.end(),
                     })
 
             clear_line_skipping( view, keep_whole_word_state=True )
 
         elif command_name == 'single_selection_last':
-            preferences = pref( view )
+            state = State( view )
 
-            if preferences.enable_find_under_expand_bug_fixes( view.settings() ) and preferences.selected_last_word:
-                preferences.blink_region = preferences.selected_last_word[-1]
+            if state.enable_find_under_expand_bug_fixes( view.settings() ) and state.selected_last_word:
+                state.blink_region = state.selected_last_word[-1]
                 clear_line_skipping( view, keep_whole_word_state=True )
 
-                def reset(): preferences.blink_region = None
+                def reset(): state.blink_region = None
                 sublime.set_timeout( reset, CLEAR_CURSORS_CARETS_BLINKING )
 
                 return ('clear_cursors_carets_single_selection_blinker', {
                         "message": "LAST",
-                        "region_start": preferences.blink_region.begin(),
-                        "region_end": preferences.blink_region.end(),
+                        "region_start": state.blink_region.begin(),
+                        "region_end": state.blink_region.end(),
                     })
 
             clear_line_skipping( view, keep_whole_word_state=True )
@@ -653,8 +653,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
     def on_query_context(self, view, key, operator, operand, match_all):
 
         if key == 'is_highlight_words_on_selection_working':
-            preferences = pref( view )
-            return not preferences.is_file_limit_reached and view.get_regions( g_regionkey )
+            state = State( view )
+            return not state.is_file_limit_reached and view.get_regions( g_regionkey )
 
     def on_activated(self, view):
 
@@ -684,29 +684,29 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
 
 def clear_line_skipping(view, keep_whole_word_state=False):
-    preferences = pref( view )
+    state = State( view )
 
-    # print('Reseting... keep_whole_word_state', keep_whole_word_state, preferences.blink_region)
-    if ( not keep_whole_word_state or not view.has_non_empty_selection_region() ) and not preferences.blink_region:
-        preferences.is_on_word_selection_mode = False
+    # print('Reseting... keep_whole_word_state', keep_whole_word_state, state.blink_region)
+    if ( not keep_whole_word_state or not view.has_non_empty_selection_region() ) and not state.blink_region:
+        state.is_on_word_selection_mode = False
 
     # to to to too
-    preferences.select_word_undo_stack.clear()
-    preferences.select_word_redo_stack.clear()
+    state.select_word_undo_stack.clear()
+    state.select_word_redo_stack.clear()
 
-    preferences.selected_first_word = None
-    preferences.selected_last_word.clear()
+    state.selected_first_word = None
+    state.selected_last_word.clear()
 
-    preferences.select_next_word_skipped = [ 0 ]
-    preferences.select_previous_word_skipped = [ sys.maxsize ]
+    state.select_next_word_skipped = [ 0 ]
+    state.select_previous_word_skipped = [ sys.maxsize ]
 
-    preferences.select_next_word_from_beginning = False
-    preferences.select_previous_word_from_bottom = False
+    state.select_next_word_from_beginning = False
+    state.select_previous_word_from_bottom = False
 
 
 def highlight_occurences(view):
     settings = view.settings()
-    preferences = pref( view )
+    state = State( view )
 
     when_selection_is_empty = Pref.when_selection_is_empty( settings )
     are_all_selections_empty = not view.has_non_empty_selection_region()
@@ -734,10 +734,10 @@ def highlight_occurences(view):
         Pref.prev_selections = prev_selections
 
     if view.size() <= Pref.file_size_limit( settings ):
-        preferences.is_file_limit_reached = False
+        state.is_file_limit_reached = False
 
     else:
-        preferences.is_file_limit_reached = True
+        state.is_file_limit_reached = True
 
     # print( 'running', str(time.time()) )
     word_regions = []
@@ -817,11 +817,11 @@ def highlight_occurences(view):
 
 def find_regions(view, word_regions, string, is_selection_empty):
     settings = view.settings()
-    preferences = pref( view )
+    state = State( view )
 
     # to to to too
     if Pref.non_word_characters( settings ):
-        if preferences.is_on_word_selection_mode or \
+        if state.is_on_word_selection_mode or \
                 Pref.only_whole_word_when_selection_is_empty( settings ) and is_selection_empty:
             search = r'\b' + escape_regex(string) + r'\b'
 
@@ -831,14 +831,14 @@ def find_regions(view, word_regions, string, is_selection_empty):
     else:
         # It seems as if \b doesn't pay attention to word_separators, but
         # \w does. Hence we use lookaround assertions instead of \b.
-        if preferences.is_on_word_selection_mode or \
+        if state.is_on_word_selection_mode or \
                 Pref.only_whole_word_when_selection_is_empty( settings ) and is_selection_empty:
             search = r'\b(?<!\w)' + escape_regex(string) + r'(?!\w)\b'
 
         else:
             search = r'(?<!\w)' + escape_regex(string) + r'(?!\w)'
 
-    if not preferences.is_file_limit_reached:
+    if not state.is_file_limit_reached:
         word_regions += view.find_all( search, Pref.case_sensitive( settings ) )
 
     else:
