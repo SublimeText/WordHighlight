@@ -3,6 +3,7 @@ import sys
 import time
 import threading
 import datetime
+import functools
 
 from collections import deque
 
@@ -59,6 +60,26 @@ def State(view=None):
     return g_view_selections.setdefault( view.id(), Pref() )
 
 
+# https://github.com/SublimeTextIssues/Core/issues/2548
+# https://github.com/wbond/ChannelRepositoryTools/pull/4
+def protect_from_sublime(default_value):
+    def wrapper_factory(wrapped_function):
+
+        @functools.wraps(wrapped_function)
+        def new_function(*args, **kwargs):
+            try:
+                return wrapped_function( *args, **kwargs )
+
+            except:
+                print( "HighlightWordsOnSelection was protected from Sublime Text bug:",
+                        "https://github.com/SublimeTextIssues/Core/issues/2548, returning", default_value )
+                return default_value
+
+        return new_function
+
+    return wrapper_factory
+
+
 class Pref:
     p = 'highlight_words_on_selection.'
     enabled = True
@@ -86,62 +107,77 @@ class Pref:
         self.select_previous_word_skipped = [ sys.maxsize ]
 
     @classmethod
+    @protect_from_sublime( 2000 )
     def when_file_size_limit_search_this_num_of_characters(cls, settings):
         return int( settings.get( cls.p + 'when_file_size_limit_search_this_num_of_characters', 20000 ) )
 
     @classmethod
+    @protect_from_sublime( 'comment' )
     def color_scope_name(cls, settings):
         return settings.get( cls.p + 'color_scope_name', 'comment' )
 
     @classmethod
+    @protect_from_sublime( True )
     def case_sensitive(cls, settings):
         return ( not bool( settings.get( cls.p + 'case_sensitive', True ) ) ) * sublime.IGNORECASE
 
     @classmethod
+    @protect_from_sublime( True )
     def draw_outlined(cls, settings):
         return bool( settings.get( cls.p + 'draw_outlined', True ) ) * sublime.DRAW_OUTLINED
 
     @classmethod
+    @protect_from_sublime( False )
     def mark_occurrences_on_gutter(cls, settings):
         return bool( settings.get( cls.p + 'mark_occurrences_on_gutter', False ) )
 
     @classmethod
+    @protect_from_sublime( 'dot' )
     def icon_type_on_gutter(cls, settings):
         return settings.get( cls.p + 'icon_type_on_gutter', 'dot' )
 
     @classmethod
+    @protect_from_sublime( False )
     def always_enable_selection_regions(cls, settings):
         return bool( settings.get( cls.p + 'always_enable_selection_regions', False ) )
 
     @classmethod
+    @protect_from_sublime( False )
     def enable_find_under_expand_bug_fixes(cls, settings):
         return bool( settings.get( cls.p + 'enable_find_under_expand_bug_fixes', False ) )
 
     @classmethod
+    @protect_from_sublime( True )
     def copy_selected_text_into_find_panel(cls, settings):
         return bool( settings.get( cls.p + 'copy_selected_text_into_find_panel', True ) )
 
     @classmethod
+    @protect_from_sublime( True )
     def blink_selection_on_single_selection(cls, settings):
         return bool( settings.get( cls.p + 'blink_selection_on_single_selection', True ) )
 
     @classmethod
+    @protect_from_sublime( False )
     def when_selection_is_empty(cls, settings):
         return bool( settings.get( cls.p + 'when_selection_is_empty', False ) )
 
     @classmethod
+    @protect_from_sublime( False )
     def only_whole_word_when_selection_is_empty(cls, settings):
         return bool( settings.get( cls.p + 'only_whole_word_when_selection_is_empty', False ) )
 
     @classmethod
+    @protect_from_sublime( False )
     def word_under_cursor_when_selection_is_empty(cls, settings):
         return bool( settings.get( cls.p + 'word_under_cursor_when_selection_is_empty', False ) )
 
     @classmethod
+    @protect_from_sublime( False )
     def non_word_characters(cls, settings):
         return bool( settings.get( cls.p + 'non_word_characters', False ) )
 
     @classmethod
+    @protect_from_sublime( 4194304 )
     def file_size_limit(cls, settings):
         return int( settings.get( cls.p + 'file_size_limit', 4194304 ) )
 
