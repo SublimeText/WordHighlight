@@ -241,14 +241,14 @@ def wh_loop():
         g_sleepEvent.wait()
 
 
-def escape_regex(str):
+def escape_regex(string):
     # Sublime text chokes when regexes contain \', \<, \>, or \`.
     # Call re.escape to escape everything, and then unescape these four.
-    str = re.escape(str)
+    string = re.escape(string)
 
     for c in "'<>`":
-        str = str.replace('\\' + c, c)
-    return str
+        string = string.replace('\\' + c, c)
+    return string
 
 
 class HighlightWordsOnSelectionEnabledCommand(sublime_plugin.TextCommand):
