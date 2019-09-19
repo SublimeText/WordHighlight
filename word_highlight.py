@@ -54,6 +54,8 @@ selections_stack = selections_stack()
 g_view_selections = {}
 
 
+# I am saving the state in this class because it is a royal pain in the ass
+# to keep typing `global` every time/everywhere I would like to use a global!
 def State(view=None):
     view = view or Pref.active_view or sublime.active_window().active_view()
     Pref.active_view = view
