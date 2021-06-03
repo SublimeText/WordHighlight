@@ -1,5 +1,14 @@
 [
 	{
+		"id": "view",
+		"caption": "View",
+		"children":
+		[
+			{ "caption": "-", "id": "settings" },
+			{ "command": "toggle_word_highlight_in_view" },
+		]
+	},
+	{
 		"id": "tools",
 		"caption": "Tools",
 		"children":
@@ -14,9 +23,7 @@
 						"caption": "Word Highlight",
 						"children":
 						[
-							{
-								"command": "set_word_highlight_enabled"
-							}
+							{ "command": "set_word_highlight_enabled" }
 						]
 					}
 				]
@@ -39,11 +46,13 @@
 						"caption": "WordHighlight",
 						"children":
 						[
+							{ "command": "set_word_highlight_enabled" },
+							{ "caption": "-" },
 							{
 								"command": "edit_settings", "args":
 								{
 									"base_file": "${packages}/WordHighlight/Word Highlight.sublime-settings",
-									"default": "{\n$0\n}\n"
+									"default": "{\n$0\n}\n",
 								},
 								"caption": "Settings"
 							},
