@@ -39,7 +39,7 @@ def plugin_loaded():
 			Pref.file_size_limit                                     = int(settings.get('file_size_limit', 4194304))
 			Pref.when_file_size_limit_search_this_num_of_characters  = int(settings.get('when_file_size_limit_search_this_num_of_characters', 20000))
 			Pref.timing                                              = time.time()
-			Pref.enabled                                             = True
+			Pref.enabled                                             = bool(settings.get('enabled', True))
 			Pref.prev_selections                                     = None
 			Pref.prev_regions                                        = None
 			Pref.select_next_word_skiped                             = 0
@@ -72,16 +72,49 @@ def escape_regex(str):
 		str = str.replace('\\' + c, c)
 	return str
 
+
+def enabled(view):
+	return Pref.enabled and \
+			view and \
+			not view.settings().get('is_widget') and \
+			view.settings().get('word_highlight_enabled', True)
+
+def updateEnabled(view):
+	if not view:
+		return
+	if enabled(view):
+		WordHighlightListener().highlight_occurences(view, forceUpdate=True)
+	else:
+		view.erase_regions("WordHighlight")
+
+
+"""Toggles the global enable state
+"""
 class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
 	def run(self):
 		Pref.enabled = not Pref.enabled
-		if not Pref.enabled:
-			sublime.active_window().active_view().erase_regions("WordHighlight")
-		else:
-			WordHighlightListener().highlight_occurences(sublime.active_window().active_view())
+		updateEnabled(sublime.active_window().active_view(), forceUpdate=True)
 
 	def description(self):
 		return 'Disable' if Pref.enabled else 'Enable'
+
+
+"""Toggles per-view enable state
+"""
+class ToggleWordHighlightInViewCommand(sublime_plugin.TextCommand):
+	def run(self, edit):
+		enabledInView = not self.view.settings().get('word_highlight_enabled', True)
+		self.view.settings().set('word_highlight_enabled', enabledInView)
+		updateEnabled(self.view)
+
+	def is_enabled(self):
+		return Pref.enabled
+
+	def is_checked(self):
+		return self.view.settings().get('word_highlight_enabled', True)
+
+	def description(self):
+		return 'Word Highlight'
 
 
 class SelectHighlightedWordsCommand(sublime_plugin.TextCommand):
@@ -115,9 +148,7 @@ class SelectHighlightedSkipLastWordCommand(sublime_plugin.TextCommand):
 class WordHighlightClickCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
 		Pref.select_next_word_skiped = 0
-		view = self.view
-		if Pref.enabled and not view.settings().get('is_widget'):
-			WordHighlightListener().highlight_occurences(view)
+		updateEnabled(self.view)
 
 
 class WordHighlightListener(sublime_plugin.EventListener):
@@ -126,11 +157,10 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		Pref.select_next_word_skiped = 0
 		if not view.is_loading():
 			Pref.word_separators = view.settings().get('word_separators') or settings_base.get('word_separators')
-			if not Pref.enabled:
-				view.erase_regions("WordHighlight")
+			updateEnabled(view)
 
 	def on_selection_modified(self, view):
-		if view and Pref.enabled and not view.settings().get('is_widget'):
+		if enabled(view):
 			now = time.time()
 			if now - Pref.timing > 0.08:
 				Pref.timing = now
@@ -142,7 +172,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 		if Pref.show_status_bar_message:
 			view.set_status("WordHighlight", message)
 
-	def highlight_occurences(self, view):
+	def highlight_occurences(self, view, forceUpdate=False):
 		if not Pref.highlight_when_selection_is_empty and not view.has_non_empty_selection_region():
 			view.erase_status("WordHighlight")
 			view.erase_regions("WordHighlight")
@@ -151,7 +181,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			return
 		# todo: The list cast below can go away when Sublime 3's Selection class implements __str__
 		prev_selections = str(list(view.sel()))
-		if Pref.prev_selections == prev_selections:
+		if Pref.prev_selections == prev_selections and not forceUpdate:
 			return
 		else:
 			Pref.prev_selections = prev_selections
@@ -195,7 +225,7 @@ class WordHighlightListener(sublime_plugin.EventListener):
 			if occurrences > 0:
 				occurrencesMessage.append('"' + string + '" '+str(occurrences) +' ')
 				occurrencesCount = occurrencesCount + occurrences
-		if Pref.prev_regions != regions:
+		if Pref.prev_regions != regions or forceUpdate:
 			view.erase_regions("WordHighlight")
 			if regions:
 				if Pref.highlight_delay == 0:
