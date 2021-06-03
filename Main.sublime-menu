@@ -40,114 +40,67 @@
 						"children":
 						[
 							{
-								"command": "open_file",
-								"args": {"file": "${packages}/WordHighlight/Word Highlight.sublime-settings"},
-								"caption": "Settings – Default"
-							},
-							{
-								"command": "open_file",
-								"args": {"file": "${packages}/User/Word Highlight.sublime-settings"},
-								"caption": "Settings – User"
-							},
-							{ "caption": "-" },
-							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/WordHighlight/Default (OSX).sublime-keymap",
-										"platform": "OSX"
+								"command": "edit_settings", "args":
+								{
+									"base_file": "${packages}/WordHighlight/Word Highlight.sublime-settings",
+									"default": "{\n$0\n}\n"
 								},
-								"caption": "Key Bindings – Default"
+								"caption": "Settings"
 							},
 							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/WordHighlight/Default (Linux).sublime-keymap",
-										"platform": "Linux"
+								"command": "edit_settings", "args":
+								{
+									"base_file": "${packages}/WordHighlight/Default (Linux).sublime-keymap",
+									"default": "{\n$0\n}\n",
 								},
-								"caption": "Key Bindings – Default"
+								"caption": "Key Bindings",
+								"platform": "Linux",
 							},
 							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/WordHighlight/Default (Windows).sublime-keymap",
-										"platform": "Windows"
+								"command": "edit_settings", "args":
+								{
+									"base_file": "${packages}/WordHighlight/Default (OSX).sublime-keymap",
+									"default": "{\n$0\n}\n",
 								},
-								"caption": "Key Bindings – Default"
+								"caption": "Key Bindings",
+								"platform": "OSX",
 							},
 							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/User/Default (OSX).sublime-keymap",
-										"platform": "OSX"
+								"command": "edit_settings", "args":
+								{
+									"base_file": "${packages}/WordHighlight/Default (Windows).sublime-keymap",
+									"default": "{\n$0\n}\n"
 								},
-								"caption": "Key Bindings – User"
+								"caption": "Key Bindings",
+								"platform": "Windows",
 							},
 							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/User/Default (Linux).sublime-keymap",
-										"platform": "Linux"
+								"command": "edit_settings", "args":
+								{
+									"base_file": "${packages}/WordHighlight/Default (Linux).sublime-mousemap",
+									"default": "{\n$0\n}\n",
 								},
-								"caption": "Key Bindings – User"
+								"caption": "Mouse Bindings",
+								"platform": "Linux",
 							},
 							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/User/Default (Windows).sublime-keymap",
-										"platform": "Windows"
+								"command": "edit_settings", "args":
+								{
+									"base_file": "${packages}/WordHighlight/Default (OSX).sublime-mousemap",
+									"default": "{\n$0\n}\n",
 								},
-								"caption": "Key Bindings – User"
-							},
-							{ "caption": "-" },
-							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/WordHighlight/Default (OSX).sublime-mousemap",
-										"platform": "OSX"
-								},
-								"caption": "Mouse Bindings – Default"
+								"caption": "Mouse Bindings",
+								"platform": "OSX",
 							},
 							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/WordHighlight/Default (Linux).sublime-mousemap",
-										"platform": "Linux"
+								"command": "edit_settings", "args":
+								{
+									"base_file": "${packages}/WordHighlight/Default (Windows).sublime-mousemap",
+									"default": "{\n$0\n}\n"
 								},
-								"caption": "Mouse Bindings – Default"
+								"caption": "Mouse Bindings",
+								"platform": "Windows",
 							},
-							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/WordHighlight/Default (Windows).sublime-mousemap",
-										"platform": "Windows"
-								},
-								"caption": "Mouse Bindings – Default"
-							},
-							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/User/Default (OSX).sublime-mousemap",
-										"platform": "OSX"
-								},
-								"caption": "Mouse Bindings – User"
-							},
-							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/User/Default (Linux).sublime-mousemap",
-										"platform": "Linux"
-								},
-								"caption": "Mouse Bindings – User"
-							},
-							{
-								"command": "open_file",
-								"args": {
-										"file": "${packages}/User/Default (Windows).sublime-mousemap",
-										"platform": "Windows"
-								},
-								"caption": "Mouse Bindings – User"
-							},
-							{ "caption": "-" }
 						]
 					}
 				]
