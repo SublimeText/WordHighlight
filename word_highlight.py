@@ -36,6 +36,7 @@ def plugin_loaded():
 			Pref.highlight_non_word_characters                       = bool(settings.get('highlight_non_word_characters', False))
 			Pref.word_separators                                     = settings_base.get('word_separators')
 			Pref.show_status_bar_message                             = bool(settings.get('show_word_highlight_status_bar_message', True))
+			Pref.status_bar_message_max_len                          = settings.get('show_word_highlight_status_bar_message_length', 200)
 			Pref.file_size_limit                                     = int(settings.get('file_size_limit', 4194304))
 			Pref.when_file_size_limit_search_this_num_of_characters  = int(settings.get('when_file_size_limit_search_this_num_of_characters', 20000))
 			Pref.timing                                              = time.time()
@@ -140,6 +141,8 @@ class WordHighlightListener(sublime_plugin.EventListener):
 
 	def set_status(self, view, message):
 		if Pref.show_status_bar_message:
+			if len(message) > (Pref.status_bar_message_max_len-3):
+				message = message[:Pref.status_bar_message_max_len-3] + '..."'
 			view.set_status("WordHighlight", message)
 
 	def highlight_occurences(self, view):
