@@ -65,6 +65,10 @@ Under the Packages/WordHighlight sub-directory, edit the `Word Highlight.sublime
 	This lets you toggle if you want a status bar message to show how many occurrences of the highlighted word there are.
 	If you mix this with `"highlight_word_under_cursor_when_selection_is_empty": false` the occurrence number will not count word your cursor is on.
 
+*	`"show_word_highlight_status_bar_message_length" : 200`
+
+	This lets you limit the length of the status bar message to prevent it from using the whole of status bar which might hide other messages.
+
 *	`"color_scope_name" : "wordhighlight"`
 
 	Normally the color of the highlights is the same as the color of comments in
