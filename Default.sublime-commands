@@ -1,0 +1,27 @@
+[
+	{ "command": "set_word_highlight_enabled" },
+	{
+		"caption": "Preferences: WordHighlight Settings",
+		"command": "edit_settings", "args":
+		{
+			"base_file": "${packages}/WordHighlight/Word Highlight.sublime-settings",
+			"default": "{\n$0\n}\n"
+		}
+	},
+	{
+		"caption": "Preferences: WordHighlight Key Bindings",
+		"command": "edit_settings", "args":
+		{
+			"base_file": "${packages}/WordHighlight/Default ($platform).sublime-keymap",
+			"default": "{\n$0\n}\n"
+		}
+	},
+	{
+		"caption": "Preferences: WordHighlight Mouse Bindings",
+		"command": "edit_settings", "args":
+		{
+			"base_file": "${packages}/WordHighlight/Default ($platform).sublime-mousemap",
+			"default": "{\n$0\n}\n"
+		}
+	}
+]
