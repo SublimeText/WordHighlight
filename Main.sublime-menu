@@ -1,7 +1,6 @@
 [
 	{
 		"id": "view",
-		"caption": "View",
 		"children":
 		[
 			{ "caption": "-", "id": "settings" },
@@ -10,7 +9,6 @@
 	},
 	{
 		"id": "tools",
-		"caption": "Tools",
 		"children":
 		[
 			{
@@ -31,8 +29,6 @@
 		]
 	},
 	{
-		"caption": "Preferences",
-		"mnemonic": "n",
 		"id": "preferences",
 		"children":
 		[
@@ -49,67 +45,29 @@
 							{ "command": "set_word_highlight_enabled" },
 							{ "caption": "-" },
 							{
+								"caption": "Settings",
 								"command": "edit_settings", "args":
 								{
 									"base_file": "${packages}/WordHighlight/Word Highlight.sublime-settings",
-									"default": "{\n$0\n}\n",
-								},
-								"caption": "Settings"
-							},
-							{
-								"command": "edit_settings", "args":
-								{
-									"base_file": "${packages}/WordHighlight/Default (Linux).sublime-keymap",
-									"default": "{\n$0\n}\n",
-								},
-								"caption": "Key Bindings",
-								"platform": "Linux",
-							},
-							{
-								"command": "edit_settings", "args":
-								{
-									"base_file": "${packages}/WordHighlight/Default (OSX).sublime-keymap",
-									"default": "{\n$0\n}\n",
-								},
-								"caption": "Key Bindings",
-								"platform": "OSX",
-							},
-							{
-								"command": "edit_settings", "args":
-								{
-									"base_file": "${packages}/WordHighlight/Default (Windows).sublime-keymap",
 									"default": "{\n$0\n}\n"
-								},
+								}
+							},
+							{
 								"caption": "Key Bindings",
-								"platform": "Windows",
-							},
-							{
 								"command": "edit_settings", "args":
 								{
-									"base_file": "${packages}/WordHighlight/Default (Linux).sublime-mousemap",
-									"default": "{\n$0\n}\n",
-								},
-								"caption": "Mouse Bindings",
-								"platform": "Linux",
-							},
-							{
-								"command": "edit_settings", "args":
-								{
-									"base_file": "${packages}/WordHighlight/Default (OSX).sublime-mousemap",
-									"default": "{\n$0\n}\n",
-								},
-								"caption": "Mouse Bindings",
-								"platform": "OSX",
-							},
-							{
-								"command": "edit_settings", "args":
-								{
-									"base_file": "${packages}/WordHighlight/Default (Windows).sublime-mousemap",
+									"base_file": "${packages}/WordHighlight/Default ($platform).sublime-keymap",
 									"default": "{\n$0\n}\n"
-								},
-								"caption": "Mouse Bindings",
-								"platform": "Windows",
+								}
 							},
+							{
+								"caption": "Mouse Bindings",
+								"command": "edit_settings", "args":
+								{
+									"base_file": "${packages}/WordHighlight/Default ($platform).sublime-mousemap",
+									"default": "{\n$0\n}\n",
+								}
+							}
 						]
 					}
 				]
