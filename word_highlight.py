@@ -89,9 +89,11 @@ def updateEnabled(view):
 		view.erase_regions("WordHighlight")
 
 
-"""Toggles the global enable state
-"""
-class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
+class SetWordHighlightEnabledCommand(sublime_plugin.ApplicationCommand):
+	"""
+	Toggles the global enable state
+	"""
+
 	def run(self):
 		Pref.enabled = not Pref.enabled
 		updateEnabled(sublime.active_window().active_view(), forceUpdate=True)
@@ -100,9 +102,11 @@ class set_word_highlight_enabled(sublime_plugin.ApplicationCommand):
 		return 'Disable' if Pref.enabled else 'Enable'
 
 
-"""Toggles per-view enable state
-"""
 class ToggleWordHighlightInViewCommand(sublime_plugin.TextCommand):
+	"""
+	Toggles per-view enable state
+	"""
+
 	def run(self, edit):
 		enabledInView = not self.view.settings().get('word_highlight_enabled', True)
 		self.view.settings().set('word_highlight_enabled', enabledInView)
